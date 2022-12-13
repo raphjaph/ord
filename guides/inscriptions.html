@@ -74,7 +74,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><a href="../introduction.html">Introduction</a></li><li class="chapter-item expanded "><a href="../overview.html"><strong aria-hidden="true">1.</strong> Overview</a></li><li class="chapter-item expanded "><a href="../faq.html"><strong aria-hidden="true">2.</strong> FAQ</a></li><li class="chapter-item expanded "><a href="../guides.html"><strong aria-hidden="true">3.</strong> Guides</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../guides/explorer.html"><strong aria-hidden="true">3.1.</strong> Explorer</a></li><li class="chapter-item expanded "><a href="../guides/inscriptions.html" class="active"><strong aria-hidden="true">3.2.</strong> Inscriptions</a></li><li class="chapter-item expanded "><a href="../guides/ordinal-hunting.html"><strong aria-hidden="true">3.3.</strong> Ordinal Hunting</a></li></ol></li><li class="chapter-item expanded "><a href="../bounties.html"><strong aria-hidden="true">4.</strong> Bounties</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../bounty/0.html"><strong aria-hidden="true">4.1.</strong> Bounty 0: 100,000 sats Claimed!</a></li><li class="chapter-item expanded "><a href="../bounty/1.html"><strong aria-hidden="true">4.2.</strong> Bounty 1: 200,000 sats Claimed!</a></li><li class="chapter-item expanded "><a href="../bounty/2.html"><strong aria-hidden="true">4.3.</strong> Bounty 2: 300,000 sats Claimed!</a></li><li class="chapter-item expanded "><a href="../bounty/3.html"><strong aria-hidden="true">4.4.</strong> Bounty 3: 400,000 sats</a></li></ol></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="../introduction.html">Introduction</a></li><li class="chapter-item expanded "><a href="../overview.html"><strong aria-hidden="true">1.</strong> Overview</a></li><li class="chapter-item expanded "><a href="../faq.html"><strong aria-hidden="true">2.</strong> FAQ</a></li><li class="chapter-item expanded "><a href="../contributing.html"><strong aria-hidden="true">3.</strong> Contributing</a></li><li class="chapter-item expanded "><a href="../guides.html"><strong aria-hidden="true">4.</strong> Guides</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../guides/explorer.html"><strong aria-hidden="true">4.1.</strong> Explorer</a></li><li class="chapter-item expanded "><a href="../guides/inscriptions.html" class="active"><strong aria-hidden="true">4.2.</strong> Inscriptions</a></li><li class="chapter-item expanded "><a href="../guides/ordinal-hunting.html"><strong aria-hidden="true">4.3.</strong> Ordinal Hunting</a></li></ol></li><li class="chapter-item expanded "><a href="../bounties.html"><strong aria-hidden="true">5.</strong> Bounties</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="../bounty/0.html"><strong aria-hidden="true">5.1.</strong> Bounty 0: 100,000 sats Claimed!</a></li><li class="chapter-item expanded "><a href="../bounty/1.html"><strong aria-hidden="true">5.2.</strong> Bounty 1: 200,000 sats Claimed!</a></li><li class="chapter-item expanded "><a href="../bounty/2.html"><strong aria-hidden="true">5.3.</strong> Bounty 2: 300,000 sats Claimed!</a></li><li class="chapter-item expanded "><a href="../bounty/3.html"><strong aria-hidden="true">5.4.</strong> Bounty 3: 400,000 sats</a></li></ol></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -140,7 +140,7 @@
 <p>Individual satoshis can be inscribed with arbitrary content, creating
 Bitcoin-native digital artifacts that can be held in a Bitcoin wallet and
 transferred using Bitcoin transactions. Inscriptions are as durable, immutable,
-secure, and decentralized as the Bitcoin blockchain itself.</p>
+secure, and decentralized as Bitcoin itself.</p>
 <p>Working with inscriptions requires a Bitcoin full node, to give you a view of
 the current state of the Bitcoin blockchain, and a wallet that can make
 ordinal-aware transactions that inscribe satoshis with content and transfer
@@ -200,14 +200,18 @@ unintentionally using the <code>ord</code> utility with non-ordinal Bitcoin wall
 <pre><code>bitcoin-cli -signet createwallet ord
 </code></pre>
 <h2 id="loading-the-bitcoin-core-wallet"><a class="header" href="#loading-the-bitcoin-core-wallet">Loading the Bitcoin Core Wallet</a></h2>
-<p>Bitcoin Core wallets must be loaded before the can be used with <code>ord</code>. To load
-your wallet, run:</p>
+<p>Bitcoin Core wallets must be loaded before they can be used with <code>ord</code>. Wallets
+are loaded automatically after being created, so you do not need to load your
+wallet if you just created it. Otherwise, run:</p>
 <pre><code>bitcoin-cli -signet loadwallet ord
 </code></pre>
 <h2 id="installing-ord"><a class="header" href="#installing-ord">Installing <code>ord</code></a></h2>
 <p>The <code>ord</code> utility is written in Rust and can be built from
 <a href="https://github.com/casey/ord">source</a>. Pre-built binaries are available on the
 <a href="https://github.com/casey/ord/releases">releases page</a>.</p>
+<p>You can install the latest pre-built binary from the command line with:</p>
+<pre><code class="language-sh">curl --proto '=https' --tlsv1.2 -fsLS https://ordinals.com/install.sh | bash -s
+</code></pre>
 <p>Once <code>ord</code> is installed, you should be able to run <code>ord --version</code> on the
 command line.</p>
 <h2 id="receiving-satoshis"><a class="header" href="#receiving-satoshis">Receiving Satoshis</a></h2>
