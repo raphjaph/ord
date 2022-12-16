@@ -80,7 +80,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><a href="introduction.html">Introduction</a></li><li class="chapter-item expanded "><a href="overview.html" class="active"><strong aria-hidden="true">1.</strong> Overview</a></li><li class="chapter-item expanded "><a href="faq.html"><strong aria-hidden="true">2.</strong> FAQ</a></li><li class="chapter-item expanded "><a href="contributing.html"><strong aria-hidden="true">3.</strong> Contributing</a></li><li class="chapter-item expanded "><a href="guides.html"><strong aria-hidden="true">4.</strong> Guides</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="guides/explorer.html"><strong aria-hidden="true">4.1.</strong> Explorer</a></li><li class="chapter-item expanded "><a href="guides/inscriptions.html"><strong aria-hidden="true">4.2.</strong> Inscriptions</a></li><li class="chapter-item expanded "><a href="guides/ordinal-hunting.html"><strong aria-hidden="true">4.3.</strong> Ordinal Hunting</a></li></ol></li><li class="chapter-item expanded "><a href="bounties.html"><strong aria-hidden="true">5.</strong> Bounties</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="bounty/0.html"><strong aria-hidden="true">5.1.</strong> Bounty 0: 100,000 sats Claimed!</a></li><li class="chapter-item expanded "><a href="bounty/1.html"><strong aria-hidden="true">5.2.</strong> Bounty 1: 200,000 sats Claimed!</a></li><li class="chapter-item expanded "><a href="bounty/2.html"><strong aria-hidden="true">5.3.</strong> Bounty 2: 300,000 sats Claimed!</a></li><li class="chapter-item expanded "><a href="bounty/3.html"><strong aria-hidden="true">5.4.</strong> Bounty 3: 400,000 sats</a></li></ol></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="introduction.html">Introduction</a></li><li class="chapter-item expanded "><a href="overview.html" class="active"><strong aria-hidden="true">1.</strong> Overview</a></li><li class="chapter-item expanded "><a href="faq.html"><strong aria-hidden="true">2.</strong> FAQ</a></li><li class="chapter-item expanded "><a href="contributing.html"><strong aria-hidden="true">3.</strong> Contributing</a></li><li class="chapter-item expanded "><a href="guides.html"><strong aria-hidden="true">4.</strong> Guides</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="guides/explorer.html"><strong aria-hidden="true">4.1.</strong> Explorer</a></li><li class="chapter-item expanded "><a href="guides/inscriptions.html"><strong aria-hidden="true">4.2.</strong> Inscriptions</a></li><li class="chapter-item expanded "><a href="guides/sat-hunting.html"><strong aria-hidden="true">4.3.</strong> Sat Hunting</a></li></ol></li><li class="chapter-item expanded "><a href="bounties.html"><strong aria-hidden="true">5.</strong> Bounties</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="bounty/0.html"><strong aria-hidden="true">5.1.</strong> Bounty 0: 100,000 sats Claimed!</a></li><li class="chapter-item expanded "><a href="bounty/1.html"><strong aria-hidden="true">5.2.</strong> Bounty 1: 200,000 sats Claimed!</a></li><li class="chapter-item expanded "><a href="bounty/2.html"><strong aria-hidden="true">5.3.</strong> Bounty 2: 300,000 sats Claimed!</a></li><li class="chapter-item expanded "><a href="bounty/3.html"><strong aria-hidden="true">5.4.</strong> Bounty 3: 400,000 sats</a></li></ol></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -155,34 +155,34 @@ the transfer scheme on the <em>order</em> of transaction inputs and outputs. Thu
 name, <em>ordinals</em>.</p>
 <p>Technical details are available in <a href="https://github.com/casey/ord/blob/master/bip.mediawiki">the
 BIP</a>.</p>
-<p>Ordinals do not require a separate token, another blockchain, or any changes to
-Bitcoin. They work right now.</p>
+<p>Ordinal theory does not require a separate token, another blockchain, or any
+changes to Bitcoin. It works right now.</p>
 <p>Ordinal numbers have a few different representations:</p>
 <ul>
 <li>
 <p><em>Integer notation</em>:
-<a href="https://ordinals.com/ordinal/2099994106992659"><code>2099994106992659</code></a> The
+<a href="https://ordinals.com/sat/2099994106992659"><code>2099994106992659</code></a> The
 ordinal number, assigned according to the order in which the satoshi was
 mined.</p>
 </li>
 <li>
 <p><em>Decimal notation</em>:
-<a href="https://ordinals.com/ordinal/3891094.16797"><code>3891094.16797</code></a> The first
+<a href="https://ordinals.com/sat/3891094.16797"><code>3891094.16797</code></a> The first
 number is the block height in which the satoshi was mined, the second the
 offset of the satoshi within the block.</p>
 </li>
 <li>
 <p><em>Degree notation</em>:
-<a href="https://ordinals.com/ordinal/3%C2%B0111094%E2%80%B2214%E2%80%B316797%E2%80%B4"><code>3°111094′214″16797‴</code></a>.
+<a href="https://ordinals.com/sat/3%C2%B0111094%E2%80%B2214%E2%80%B316797%E2%80%B4"><code>3°111094′214″16797‴</code></a>.
 We'll get to that in a moment.</p>
 </li>
 <li>
 <p><em>Percentile notation</em>:
-<a href="https://ordinals.com/ordinal/99.99971949060254%25"><code>99.99971949060254%</code></a> .
+<a href="https://ordinals.com/sat/99.99971949060254%25"><code>99.99971949060254%</code></a> .
 The satoshi's position in Bitcoin's supply, expressed as a percentage.</p>
 </li>
 <li>
-<p><em>Name</em>: <a href="https://ordinals.com/ordinal/satoshi"><code>satoshi</code></a>. An encoding of the
+<p><em>Name</em>: <a href="https://ordinals.com/sat/satoshi"><code>satoshi</code></a>. An encoding of the
 ordinal number using the characters <code>a</code> through <code>z</code>.</p>
 </li>
 </ul>
