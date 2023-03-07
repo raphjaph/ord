@@ -786,4 +786,66 @@ mod tests {
       Err(InscriptionError::UnrecognizedEvenField),
     );
   }
+
+  #[test]
+  fn empty_parent_id() {
+    let inscription = Inscription {
+      parent: None,
+      content_type: None,
+      body: Some(b"foo".to_vec()),
+    };
+    assert_eq!(
+      inscription.get_parent_id(),
+      None,
+    );
+  }
+
+  #[test]
+  fn empty_vec_parent_id() {
+    let inscription = Inscription {
+      parent: Some(Vec::new()),
+      content_type: Some(b"image/png".to_vec()),
+      body: Some(b"foo".to_vec()),
+    };
+    assert_eq!(
+      inscription.get_parent_id(),
+      None,
+    );
+  }
+
+  #[test]
+  fn invalid_len_parent_id() {
+    let inscription = Inscription {
+      parent: Some(vec![0; 39]),
+      content_type: Some(b"image/png".to_vec()),
+      body: Some(b"foo".to_vec()),
+    };
+    assert_eq!(
+      inscription.get_parent_id(),
+      None,
+    );
+
+    let inscription2 = Inscription {
+      parent: Some(vec![0; 19]),
+      content_type: Some(b"image/png".to_vec()),
+      body: Some(b"foo".to_vec()),
+    };
+    assert_eq!(
+      inscription2.get_parent_id(),
+      None,
+    );
+  }
+
+  #[test]
+  fn valid_parent_id() {
+    let inscription = Inscription {
+      parent: Some(vec![0; 36]),
+      content_type: Some(b"image/png".to_vec()),
+      body: Some(b"foo".to_vec()),
+    };
+    assert_eq!(
+      inscription.get_parent_id(),
+      Some(InscriptionId::load([0; 36])),
+    );
+  }
 }
