@@ -263,15 +263,10 @@ impl<'a> InscriptionParser<'a> {
       return Ok(Some(Inscription {
         body,
         content_type,
-        parent: match parent {
-          None => None,
-          Some(bytes) => {
-            if bytes.len() != 36 {
-              return Err(InscriptionError::InvalidInscription)
-            }
-            Some(InscriptionId::load(bytes.as_slice().try_into().unwrap()))
-          }
-        },
+        parent: parent.and_then(|parent| {
+          let parent_slice: &[u8] = parent.as_slice();
+          Some(InscriptionId::load(parent_slice.try_into().ok()?))
+        }),
       }));
     }
 
@@ -788,64 +783,58 @@ mod tests {
   }
 
   #[test]
-  fn empty_parent_id() {
-    let inscription = Inscription {
-      parent: None,
-      content_type: None,
-      body: Some(b"foo".to_vec()),
-    };
+  fn no_parent() {
     assert_eq!(
-      inscription.get_parent_id(),
-      None,
+      InscriptionParser::parse(&envelope(&[b"ord", &[1], b"image/png", &[], b"foo", ])),
+      Ok(Inscription {
+        parent: None,
+        content_type: Some(b"image/png".to_vec()),
+        body: Some(b"foo".to_vec()),
+      }),
     );
   }
 
   #[test]
-  fn empty_vec_parent_id() {
-    let inscription = Inscription {
-      parent: Some(Vec::new()),
-      content_type: Some(b"image/png".to_vec()),
-      body: Some(b"foo".to_vec()),
-    };
+  fn ignore_empty_parent() {
     assert_eq!(
-      inscription.get_parent_id(),
-      None,
+      InscriptionParser::parse(&envelope(&[b"ord", &[1], b"image/png", &[3], &[], &[], b"foo", ])),
+      Ok(Inscription {
+        parent: None,
+        content_type: Some(b"image/png".to_vec()),
+        body: Some(b"foo".to_vec()),
+      }),
     );
   }
 
   #[test]
-  fn invalid_len_parent_id() {
-    let inscription = Inscription {
-      parent: Some(vec![0; 39]),
-      content_type: Some(b"image/png".to_vec()),
-      body: Some(b"foo".to_vec()),
-    };
+  fn ignore_invalid_parent() {
     assert_eq!(
-      inscription.get_parent_id(),
-      None,
+      InscriptionParser::parse(&envelope(&[b"ord", &[1], b"image/png", &[3], &[0; 19], &[], b"foo", ])),
+      Ok(Inscription {
+        parent: None,
+        content_type: Some(b"image/png".to_vec()),
+        body: Some(b"foo".to_vec()),
+      }),
     );
-
-    let inscription2 = Inscription {
-      parent: Some(vec![0; 19]),
-      content_type: Some(b"image/png".to_vec()),
-      body: Some(b"foo".to_vec()),
-    };
     assert_eq!(
-      inscription2.get_parent_id(),
-      None,
+      InscriptionParser::parse(&envelope(&[b"ord", &[1], b"image/png", &[3], &[0; 37], &[], b"foo", ])),
+      Ok(Inscription {
+        parent: None,
+        content_type: Some(b"image/png".to_vec()),
+        body: Some(b"foo".to_vec()),
+      }),
     );
   }
 
   #[test]
-  fn valid_parent_id() {
-    let inscription = Inscription {
-      parent: Some(vec![0; 36]),
-      content_type: Some(b"image/png".to_vec()),
-      body: Some(b"foo".to_vec()),
-    };
+  fn valid_parent() {
     assert_eq!(
-      inscription.get_parent_id(),
-      Some(InscriptionId::load([0; 36])),
+      InscriptionParser::parse(&envelope(&[b"ord", &[1], b"image/png", &[3], &[0; 36], &[], b"foo", ])),
+      Ok(Inscription {
+        parent: Some(InscriptionId::load([0; 36])),
+        content_type: Some(b"image/png".to_vec()),
+        body: Some(b"foo".to_vec()),
+      }),
     );
   }
 }
