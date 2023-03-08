@@ -264,8 +264,7 @@ impl<'a> InscriptionParser<'a> {
         body,
         content_type,
         parent: parent.and_then(|parent| {
-          let parent_slice: &[u8] = parent.as_slice();
-          Some(InscriptionId::load(parent_slice.try_into().ok()?))
+          Some(InscriptionId::load(parent.as_slice().try_into().ok()?))
         }),
       }));
     }
