@@ -364,9 +364,9 @@ impl Inscribe {
     } else {
       sighash_cache.taproot_script_spend_signature_hash(
         commit_input_offset,
-        &Prevouts::One(commit_input_offset, output),
+        &Prevouts::All(&[output]),
         TapLeafHash::from_script(&reveal_script, LeafVersion::TapScript),
-        SchnorrSighashType::AllPlusAnyoneCanPay,
+        SchnorrSighashType::Default,
       )
     }
     .expect("signature hash should compute");
@@ -376,7 +376,6 @@ impl Inscribe {
         .expect("should be cryptographically secure hash"),
       &key_pair,
     );
-    let final_sig = SchnorrSig { sig: signature, hash_ty: SchnorrSighashType::AllPlusAnyoneCanPay };
     let witness = sighash_cache
       .witness_mut(commit_input_offset)
       .expect("getting mutable witness reference should work");
