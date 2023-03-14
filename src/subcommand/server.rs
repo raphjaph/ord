@@ -1,3 +1,5 @@
+use serde_json::{Value};
+
 use {
   self::{
     deserialize_from_str::DeserializeFromStr,
@@ -725,6 +727,10 @@ impl Server {
       .get_inscription_by_id(inscription_id)?
       .ok_or_not_found(|| format!("inscription {inscription_id}"))?;
 
+    if let Some(response) = Self::get_content_response_if_child_pointer(&inscription) {
+      return response;
+    }
+
     Ok(
       Self::content_response(inscription)
         .ok_or_not_found(|| format!("inscription {inscription_id} content"))?
@@ -755,6 +761,45 @@ impl Server {
     Some((headers, inscription.into_body()?))
   }
 
+  fn get_parent_url_params_if_child_pointer(inscription: &Inscription) -> Option<String> {
+    if !inscription.get_parent_id().is_some() {
+      return None;
+    }
+
+    if !Self::valid_json(inscription.body()) {
+      return None;
+    }
+
+    let json_result: Result<Value, serde_json::Error> = serde_json::from_slice(&inscription.body().unwrap());
+    let json: Value = json_result.unwrap();
+
+    if !json.as_object().unwrap().contains_key("is_pointer") {
+      return None;
+    }
+
+    let parent_url_params = Self::get_url_params_from_json_value(json);
+
+    Some(parent_url_params)
+  }
+
+  fn get_content_response_if_child_pointer(inscription: &Inscription) -> Option<ServerResult<Response>> {
+    let parent_url_params = Self::get_parent_url_params_if_child_pointer(inscription);
+    if let Some(url_params) = parent_url_params {
+      let redirect_uri = format!("/content/{}?{}", inscription.get_parent_id().unwrap(), url_params);
+      return Some(Ok(Redirect::temporary(&redirect_uri).into_response()));
+    }
+    None
+  }
+
+  fn get_preview_response_if_child_pointer(inscription: &Inscription) -> Option<ServerResult<Response>> {
+    let parent_url_params = Self::get_parent_url_params_if_child_pointer(inscription);
+    if let Some(url_params) = parent_url_params {
+      let redirect_uri = format!("/preview/{}?{}", inscription.get_parent_id().unwrap(), url_params);
+      return Some(Ok(Redirect::temporary(&redirect_uri).into_response()));
+    }
+    None
+  }
+
   async fn preview(
     Extension(index): Extension<Arc<Index>>,
     Extension(config): Extension<Arc<Config>>,
@@ -767,6 +812,10 @@ impl Server {
     let inscription = index
       .get_inscription_by_id(inscription_id)?
       .ok_or_not_found(|| format!("inscription {inscription_id}"))?;
+
+    if let Some(response) = Self::get_preview_response_if_child_pointer(&inscription) {
+      return response;
+    }
 
     return match inscription.media() {
       Media::Audio => Ok(PreviewAudioHtml { inscription_id }.into_response()),
@@ -810,6 +859,28 @@ impl Server {
       Media::Unknown => Ok(PreviewUnknownHtml.into_response()),
       Media::Video => Ok(PreviewVideoHtml { inscription_id }.into_response()),
     };
+  }
+
+  fn valid_json(data: Option<&[u8]>) -> bool {
+    match data {
+      Some(bytes) => serde_json::from_slice::<Value>(bytes).is_ok(),
+      None => false,
+    }
+  }
+
+  fn get_url_params_from_json_value(json: Value) -> String {
+    let mut params_str = String::new();
+    if let Some(url_params_field) = json.get("url_params") {
+      if let Some(url_params) = url_params_field.as_array() {
+        for param in url_params {
+          if !params_str.is_empty() {
+            params_str.push('&');
+          }
+          params_str.push_str(&param.as_str().unwrap());
+        }
+      }
+    }
+    params_str
   }
 
   async fn inscription(
