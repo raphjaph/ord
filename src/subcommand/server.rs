@@ -1,4 +1,4 @@
-use serde_json::{Value};
+use serde_json::Value;
 
 use {
   self::{
@@ -870,15 +870,11 @@ impl Server {
 
   fn get_url_params_from_json_value(json: Value) -> String {
     let mut params_str = String::new();
+
     if let Some(url_params_field) = json.get("url_params") {
       if let Some(url_params) = url_params_field.as_array() {
-        // do a .join() for url_params
-        for param in url_params {
-          if !params_str.is_empty() {
-            params_str.push('&');
-          }
-          params_str.push_str(&param.as_str().unwrap());
-        }
+        let param_strs: Vec<&str> = url_params.into_iter().map(|v| v.as_str().unwrap()).collect();
+        params_str = param_strs.join("&");
       }
     }
     params_str
