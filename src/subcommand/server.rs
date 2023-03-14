@@ -773,7 +773,7 @@ impl Server {
     let json_result: Result<Value, serde_json::Error> = serde_json::from_slice(&inscription.body().unwrap());
     let json: Value = json_result.unwrap();
 
-    if !json.as_object().unwrap().contains_key("is_pointer") {
+    if !json.as_object().unwrap().contains_key("is_ord_pointer") {
       return None;
     }
 
@@ -786,7 +786,7 @@ impl Server {
     let parent_url_params = Self::get_parent_url_params_if_child_pointer(inscription);
     if let Some(url_params) = parent_url_params {
       let redirect_uri = format!("/content/{}?{}", inscription.get_parent_id().unwrap(), url_params);
-      return Some(Ok(Redirect::temporary(&redirect_uri).into_response()));
+      return Some(Ok(Redirect::permanent(&redirect_uri).into_response()));
     }
     None
   }
@@ -795,7 +795,7 @@ impl Server {
     let parent_url_params = Self::get_parent_url_params_if_child_pointer(inscription);
     if let Some(url_params) = parent_url_params {
       let redirect_uri = format!("/preview/{}?{}", inscription.get_parent_id().unwrap(), url_params);
-      return Some(Ok(Redirect::temporary(&redirect_uri).into_response()));
+      return Some(Ok(Redirect::permanent(&redirect_uri).into_response()));
     }
     None
   }
@@ -872,6 +872,7 @@ impl Server {
     let mut params_str = String::new();
     if let Some(url_params_field) = json.get("url_params") {
       if let Some(url_params) = url_params_field.as_array() {
+        // do a .join() for url_params
         for param in url_params {
           if !params_str.is_empty() {
             params_str.push('&');
