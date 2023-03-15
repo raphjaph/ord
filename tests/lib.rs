@@ -43,6 +43,7 @@ struct Inscribe {
   inscription: String,
   reveal: Txid,
   fees: u64,
+  #[allow(dead_code)]
   parent: Option<String>,
 }
 

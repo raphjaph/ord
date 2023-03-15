@@ -139,4 +139,14 @@ impl CommandBuilder {
     serde_json::from_str(&stdout)
       .unwrap_or_else(|err| panic!("Failed to deserialize JSON: {err}\n{stdout}"))
   }
+
+  pub(crate) fn output_only_json<T: DeserializeOwned>(self) -> T {
+    // let stdout = self.stdout_regex("\\{.*\\}$").run();
+    // let stdout = self.stdout_regex("^\\s*({[^{}]*})").run();
+    let stdout = self.stdout_regex(r"s*(\{[^{}]*\})s*").run();
+    println!("stdout: {}", stdout);
+    // let stdout = self.stdout_regex(r"({(?:\n*.*)*})").run();
+    serde_json::from_str(&stdout)
+      .unwrap_or_else(|err| panic!("Failed to deserialize JSON: {err}\n{stdout}"))
+  }
 }
