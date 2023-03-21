@@ -41,6 +41,7 @@ mime_guess = "2.0.4"
 miniscript = "9.0.0"
 mp4 = "0.13.0"
 ord-bitcoincore-rpc = "0.16.5"
+prost = "0.11.8"
 redb = "0.13.0"
 regex = "1.6.0"
 rss = "2.0.1"
@@ -52,9 +53,10 @@ serde_json = { version = "1.0.81" }
 serde_yaml = "0.9.17"
 sys-info = "0.9.1"
 tempfile = "3.2.0"
-tokio = { version = "1.17.0", features = ["rt-multi-thread"] }
+tokio = { version = "1.17.0", features = ["rt-multi-thread", "macros"] }
 tokio-stream = "0.1.9"
 tokio-util = {version = "0.7.3", features = ["compat"] }
+tonic = "0.8.3"
 tower-http = { version = "0.3.3", features = ["compression-br", "compression-gzip", "cors", "set-header"] }
 
 [dev-dependencies]
@@ -78,3 +80,4 @@ path = "tests/lib.rs"
 
 [build-dependencies]
 pulldown-cmark = "0.9.2"
+tonic-build = "0.8.4"
