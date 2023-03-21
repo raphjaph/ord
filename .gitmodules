@@ -1,0 +1,3 @@
+[submodule "src/rpc/proto"]
+	path = src/rpc/proto
+	url = git@github.com:Elenpay/ordinals-rpc.git
