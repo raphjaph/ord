@@ -20,9 +20,14 @@
                     "kind": "bin"
                 }
             },
-            "args": ["--index", "index.rdb", "-r", "--rpc-url", "http://127.0.0.1:18444/wallet/ord", "--rpc-user","polaruser", "--rpc-pass", "polarpass", "api"],
+            "args": ["api"],
             "env": {
                 "ORD_PATH": "${workspaceFolder}/temp",
+                "RPC_URL": "http://127.0.0.1:18444/wallet/ord",
+                "RPC_USER": "polaruser",
+                "RPC_PASS": "polarpass",
+                "INDEX_DIR": "${workspaceFolder}/index.rdb",
+                "REGTEST": "1"
             },
             "cwd": "${workspaceFolder}"
         },

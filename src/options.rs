@@ -16,13 +16,13 @@ pub(crate) struct Options {
     help = "Use <CHAIN>."
   )]
   pub(crate) chain_argument: Chain,
-  #[clap(long, help = "Load configuration from <CONFIG>.")]
+  #[clap(long, help = "Load configuration from <CONFIG>.", env = "CHAIN")]
   pub(crate) config: Option<PathBuf>,
   #[clap(long, help = "Load configuration from <CONFIG_DIR>.")]
   pub(crate) config_dir: Option<PathBuf>,
   #[clap(long, help = "Load Bitcoin Core RPC cookie file from <COOKIE_FILE>.")]
   pub(crate) cookie_file: Option<PathBuf>,
-  #[clap(long, help = "Store index in <DATA_DIR>.")]
+  #[clap(long, help = "Store index in <DATA_DIR>.", env = "DATA_DIR")]
   pub(crate) data_dir: Option<PathBuf>,
   #[clap(
     long,
@@ -31,23 +31,23 @@ pub(crate) struct Options {
   pub(crate) first_inscription_height: Option<u64>,
   #[clap(long, help = "Limit index to <HEIGHT_LIMIT> blocks.")]
   pub(crate) height_limit: Option<u64>,
-  #[clap(long, help = "Use index at <INDEX>.")]
+  #[clap(long, help = "Use index at <INDEX>.", env = "INDEX_DIR")]
   pub(crate) index: Option<PathBuf>,
   #[clap(long, help = "Track location of all satoshis.")]
   pub(crate) index_sats: bool,
-  #[clap(long, short, help = "Use regtest. Equivalent to `--chain regtest`.")]
+  #[clap(long, short, help = "Use regtest. Equivalent to `--chain regtest`.", env = "REGTEST")]
   pub(crate) regtest: bool,
-  #[clap(long, help = "Authenticate to Bitcoin Core RPC as <RPC_USER>.")]
+  #[clap(long, help = "Authenticate to Bitcoin Core RPC as <RPC_USER>.", env = "RPC_USER")]
   pub(crate) rpc_user: Option<String>,
-  #[clap(long, help = "Authenticate to Bitcoin Core RPC with <RPC_PASS>.")]
+  #[clap(long, help = "Authenticate to Bitcoin Core RPC with <RPC_PASS>.", env = "RPC_PASS")]
   pub(crate) rpc_pass: Option<String>,
-  #[clap(long, help = "Connect to Bitcoin Core RPC at <RPC_URL>.")]
+  #[clap(long, help = "Connect to Bitcoin Core RPC at <RPC_URL>.", env = "RPC_URL")]
   pub(crate) rpc_url: Option<String>,
   #[clap(long, short, help = "Use signet. Equivalent to `--chain signet`.")]
   pub(crate) signet: bool,
-  #[clap(long, short, help = "Use testnet. Equivalent to `--chain testnet`.")]
+  #[clap(long, short, help = "Use testnet. Equivalent to `--chain testnet`.", )]
   pub(crate) testnet: bool,
-  #[clap(long, default_value = "ord", help = "Use wallet named <WALLET>.")]
+  #[clap(long, default_value = "ord", help = "Use wallet named <WALLET>.", env = "WALLET")]
   pub(crate) wallet: String,
 }
 
