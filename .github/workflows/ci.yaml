@@ -14,9 +14,9 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v2
-
-    - name: Update submodules
-      run: git submodule update --init --recursive
+      with:
+        token: ${{ secrets.ACCESS_TOKEN }}
+        submodules: true
 
     - name: Build Docker image
       run: docker build -t ghcr.io/${{ github.repository }}/bordify-api .
