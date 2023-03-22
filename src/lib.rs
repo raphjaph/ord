@@ -120,9 +120,10 @@ pub mod subcommand;
 mod tally;
 mod templates;
 mod wallet;
+pub mod rpc;
+
 
 type Result<T = (), E = Error> = std::result::Result<T, E>;
-
 const DIFFCHANGE_INTERVAL: u64 = bitcoin::blockdata::constants::DIFFCHANGE_INTERVAL as u64;
 const SUBSIDY_HALVING_INTERVAL: u64 =
   bitcoin::blockdata::constants::SUBSIDY_HALVING_INTERVAL as u64;
@@ -144,8 +145,8 @@ fn timestamp(seconds: u32) -> DateTime<Utc> {
 const INTERRUPT_LIMIT: u64 = 5;
 
 pub fn main() {
+  
   env_logger::init();
-
   ctrlc::set_handler(move || {
     LISTENERS
       .lock()

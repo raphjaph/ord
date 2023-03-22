@@ -16,13 +16,13 @@ pub(crate) struct Options {
     help = "Use <CHAIN>."
   )]
   pub(crate) chain_argument: Chain,
-  #[clap(long, help = "Load configuration from <CONFIG>.")]
+  #[clap(long, help = "Load configuration from <CONFIG>.", env = "CHAIN")]
   pub(crate) config: Option<PathBuf>,
   #[clap(long, help = "Load configuration from <CONFIG_DIR>.")]
   pub(crate) config_dir: Option<PathBuf>,
   #[clap(long, help = "Load Bitcoin Core RPC cookie file from <COOKIE_FILE>.")]
   pub(crate) cookie_file: Option<PathBuf>,
-  #[clap(long, help = "Store index in <DATA_DIR>.")]
+  #[clap(long, help = "Store index in <DATA_DIR>.", env = "DATA_DIR")]
   pub(crate) data_dir: Option<PathBuf>,
   #[clap(
     long,
@@ -31,19 +31,23 @@ pub(crate) struct Options {
   pub(crate) first_inscription_height: Option<u64>,
   #[clap(long, help = "Limit index to <HEIGHT_LIMIT> blocks.")]
   pub(crate) height_limit: Option<u64>,
-  #[clap(long, help = "Use index at <INDEX>.")]
+  #[clap(long, help = "Use index at <INDEX>.", env = "INDEX_DIR")]
   pub(crate) index: Option<PathBuf>,
   #[clap(long, help = "Track location of all satoshis.")]
   pub(crate) index_sats: bool,
-  #[clap(long, short, help = "Use regtest. Equivalent to `--chain regtest`.")]
+  #[clap(long, short, help = "Use regtest. Equivalent to `--chain regtest`.", env = "REGTEST")]
   pub(crate) regtest: bool,
-  #[clap(long, help = "Connect to Bitcoin Core RPC at <RPC_URL>.")]
+  #[clap(long, help = "Authenticate to Bitcoin Core RPC as <RPC_USER>.", env = "RPC_USER")]
+  pub(crate) rpc_user: Option<String>,
+  #[clap(long, help = "Authenticate to Bitcoin Core RPC with <RPC_PASS>.", env = "RPC_PASS")]
+  pub(crate) rpc_pass: Option<String>,
+  #[clap(long, help = "Connect to Bitcoin Core RPC at <RPC_URL>.", env = "RPC_URL")]
   pub(crate) rpc_url: Option<String>,
   #[clap(long, short, help = "Use signet. Equivalent to `--chain signet`.")]
   pub(crate) signet: bool,
-  #[clap(long, short, help = "Use testnet. Equivalent to `--chain testnet`.")]
+  #[clap(long, short, help = "Use testnet. Equivalent to `--chain testnet`.", )]
   pub(crate) testnet: bool,
-  #[clap(long, default_value = "ord", help = "Use wallet named <WALLET>.")]
+  #[clap(long, default_value = "ord", help = "Use wallet named <WALLET>.", env = "WALLET")]
   pub(crate) wallet: String,
 }
 
@@ -136,25 +140,50 @@ impl Options {
     )
   }
 
-  pub(crate) fn bitcoin_rpc_client(&self) -> Result<Client> {
-    let cookie_file = self
-      .cookie_file()
-      .map_err(|err| anyhow!("failed to get cookie file path: {err}"))?;
+  fn derive_var(
+    arg: Option<OsString>,
+    env: Option<OsString>,
+    config: Option<OsString>,
+    default: Option<OsString>,
+  ) -> Option<OsString> {
+    arg.or(env).or(config).or(default)
+  }
 
-    let rpc_url = self.rpc_url();
+  pub(crate) fn auth(&self) -> Auth {
+    log::info!("Connecting to Bitcoin Core at {}", self.rpc_url());
 
-    log::info!(
-      "Connecting to Bitcoin Core RPC server at {rpc_url} using credentials from `{}`",
-      cookie_file.display()
+    let config = self.load_config().unwrap();
+
+    let rpc_user = Options::derive_var(
+      self.rpc_user.as_ref().map(|string| string.into()),
+      env::var_os("RPC_USER"),
+      config.rpc_user.map(|string| string.into()),
+      None,
     );
 
-    let client =
-      Client::new(&rpc_url, Auth::CookieFile(cookie_file.clone())).with_context(|| {
-        format!(
-          "failed to connect to Bitcoin Core RPC at {rpc_url} using cookie file {}",
-          cookie_file.display()
-        )
-      })?;
+    let rpc_pass = Options::derive_var(
+      self.rpc_pass.as_ref().map(|string| string.into()),
+      env::var_os("RPC_PASS"),
+      config.rpc_pass.map(|string| string.into()),
+      None,
+    );
+
+    match (rpc_user, rpc_pass) {
+      (Some(rpc_user), Some(rpc_pass)) => Auth::UserPass(
+        rpc_user.into_string().expect("rpc_user is invalid UTF-8"),
+        rpc_pass.into_string().expect("rpc_pass is invalid UTF-8"),
+      ),
+      _ => Auth::CookieFile(self.cookie_file().unwrap()),
+    }
+  }
+
+  pub(crate) fn bitcoin_rpc_client(&self) -> Result<Client> {
+    let rpc_url = self.rpc_url();
+
+    let auth = self.auth();
+
+    let client = Client::new(&rpc_url, auth)
+      .with_context(|| format!("failed to connect to Bitcoin Core RPC at {rpc_url}"))?;
 
     let rpc_chain = match client.get_blockchain_info()?.chain.as_str() {
       "main" => Chain::Mainnet,
@@ -561,6 +590,39 @@ mod tests {
         .unwrap(),
       Config {
         hidden: iter::once(id).collect(),
+        rpc_user: None,
+        rpc_pass: None,
+      }
+    );
+  }
+
+  #[test]
+  fn test_rpc_user_and_pass_flags() {
+    let options =
+      Arguments::try_parse_from(["ord", "--rpc-user", "foo", "--rpc-pass", "bar", "index"])
+        .unwrap()
+        .options;
+
+    assert_eq!(options.rpc_user.unwrap(), "foo".to_string());
+    assert_eq!(options.rpc_pass.unwrap(), "bar".to_string());
+  }
+
+  #[test]
+  fn config_with_rpc_user_pass() {
+    let tempdir = TempDir::new().unwrap();
+    let path = tempdir.path().join("ord.yaml");
+    fs::write(&path, "hidden:\nrpc_user: foo\nrpc_pass: bar").unwrap();
+
+    assert_eq!(
+      Arguments::try_parse_from(["ord", "--config", path.to_str().unwrap(), "index",])
+        .unwrap()
+        .options
+        .load_config()
+        .unwrap(),
+      Config {
+        hidden: HashSet::new(),
+        rpc_user: Some("foo".into()),
+        rpc_pass: Some("bar".into()),
       }
     );
   }
@@ -592,7 +654,48 @@ mod tests {
       .unwrap(),
       Config {
         hidden: iter::once(id).collect(),
+        rpc_user: None,
+        rpc_pass: None,
       }
+    );
+  }
+
+  #[test]
+  fn test_derive_var() {
+    assert_eq!(Options::derive_var(None, None, None, None), None);
+
+    assert_eq!(
+      Options::derive_var(None, None, None, Some("foo".into())),
+      Some("foo".into())
+    );
+
+    assert_eq!(
+      Options::derive_var(None, None, Some("bar".into()), Some("foo".into())),
+      Some("bar".into())
+    );
+
+    assert_eq!(
+      Options::derive_var(
+        None,
+        Some("baz".into()),
+        Some("bar".into()),
+        Some("foo".into())
+      ),
+      Some("baz".into())
+    );
+
+    assert_eq!(
+      Options::derive_var(
+        Some("qux".into()),
+        Some("baz".into()),
+        Some("bar".into()),
+        Some("foo".into())
+      ),
+      Some("qux".into())
+    );
+
+    assert!(
+      Options::derive_var(Some("qux".into()), None, None, Some("foo".into())) != Some("foo".into())
     );
   }
 }

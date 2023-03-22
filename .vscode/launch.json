@@ -1,0 +1,92 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+    
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug executable 'ord'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=ord",
+                    "--package=ord"
+                ],
+                "filter": {
+                    "name": "ord",
+                    "kind": "bin"
+                }
+            },
+            "args": ["api"],
+            "env": {
+                "ORD_PATH": "${workspaceFolder}/temp",
+                "RPC_URL": "http://127.0.0.1:18444/wallet/ord",
+                "RPC_USER": "polaruser",
+                "RPC_PASS": "polarpass",
+                "INDEX_DIR": "${workspaceFolder}/index.rdb",
+                "REGTEST": "1"
+            },
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in executable 'ord'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--bin=ord",
+                    "--package=ord"
+                ],
+                "filter": {
+                    "name": "ord",
+                    "kind": "bin"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug integration test 'integration'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--test=integration",
+                    "--package=ord"
+                ],
+                "filter": {
+                    "name": "integration",
+                    "kind": "test"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in library 'test-bitcoincore-rpc'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--lib",
+                    "--package=test-bitcoincore-rpc"
+                ],
+                "filter": {
+                    "name": "test-bitcoincore-rpc",
+                    "kind": "lib"
+                }
+            },
+            "args": [],
+            "cwd": "${workspaceFolder}"
+        }
+    ]
+}
