@@ -21,6 +21,12 @@ pub struct Ord {
 /// Starts the gRPC server.
 pub(crate) async fn start_grpc_server(options: Options) -> Result<(), Box<dyn std::error::Error>> {
 
+  //If ORD_PATH does not exist, create it
+  let path = env::var("ORD_PATH").unwrap_or("/ord".to_string());
+  let pathbuf = PathBuf::from(&path);
+  if !pathbuf.exists() {
+    std::fs::create_dir_all(pathbuf)?;
+  }
 
   let ord = Ord { options };
   let port = 50051;
