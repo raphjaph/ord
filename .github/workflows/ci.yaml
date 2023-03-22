@@ -30,4 +30,4 @@ jobs:
 
     - name: Push Docker image to GitHub Container Registry
       run: |
-        docker push ghcr.io/${{ github.repository }}/bordify-api
+        docker push ghcr.io/elenpay/bordify-api
