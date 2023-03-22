@@ -19,7 +19,7 @@ jobs:
         submodules: true
 
     - name: Build Docker image
-      run: docker build -t ghcr.io/elenpay/bordify-api .
+      run: docker build -t ghcr.io/elenpay/bordify-ord .
 
     - name: Login to GitHub Container Registry
       uses: docker/login-action@v1
@@ -30,4 +30,4 @@ jobs:
 
     - name: Push Docker image to GitHub Container Registry
       run: |
-        docker push ghcr.io/elenpay/bordify-api
+        docker push ghcr.io/elenpay/bordify-ord
