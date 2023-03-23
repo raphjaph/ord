@@ -166,6 +166,8 @@ fn inscribe_child() {
     thread::sleep(Duration::from_millis(50));
   }
 
+  thread::sleep(Duration::from_secs(1));
+
   let _ = ord(&cookiefile, &ord_data_dir, rpc_port, &["wallet", "create"]);
 
   // get funds in wallet
@@ -178,6 +180,8 @@ fn inscribe_child() {
     bitcoincore_rpc::Auth::CookieFile(cookiefile.clone()),
   )
   .unwrap();
+
+  thread::sleep(Duration::from_secs(1));
 
   let address = rpc_client
     .get_new_address(None, Some(bitcoincore_rpc::json::AddressType::Bech32m))
