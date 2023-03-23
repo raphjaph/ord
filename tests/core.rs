@@ -216,7 +216,6 @@ fn inscribe_child() {
   };
   let parent_id = output.inscription;
 
-  thread::sleep(Duration::from_secs(1));
   rpc_client.generate_to_address(1, &address).unwrap();
   thread::sleep(Duration::from_secs(1));
 

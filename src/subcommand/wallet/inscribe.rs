@@ -466,18 +466,13 @@ impl Inscribe {
       let mut reveal_tx = reveal_tx.clone();
 
       for txin in &mut reveal_tx.input {
-        // only add dummy witness for reveal input/commit output
-        if txin.previous_output == OutPoint::null() {
-          txin.witness.push(
-            Signature::from_slice(&[0; SCHNORR_SIGNATURE_SIZE])
-              .unwrap()
-              .as_ref(),
-          );
-          txin.witness.push(script);
-          txin.witness.push(&control_block.serialize());
-        } else {
-          txin.witness = Witness::from_vec(vec![vec![0; SCHNORR_SIGNATURE_SIZE]]);
-        }
+        txin.witness.push(
+          Signature::from_slice(&[0; SCHNORR_SIGNATURE_SIZE])
+            .unwrap()
+            .as_ref(),
+        );
+        txin.witness.push(script);
+        txin.witness.push(&control_block.serialize());
       }
 
       fee_rate.fee(reveal_tx.vsize())
