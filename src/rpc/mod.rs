@@ -19,6 +19,8 @@ pub struct Ord {
 
 /// Starts the gRPC server.
 pub(crate) async fn start_grpc_server(options: Options) -> Result<(), Box<dyn std::error::Error>> { 
+
+  println!("options: {:?}", options);
   //Start the index updater
   start_index_updater(options.clone());
 
