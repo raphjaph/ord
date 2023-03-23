@@ -189,7 +189,6 @@ fn inscribe_child() {
     .unwrap();
 
   rpc_client.generate_to_address(1, &address).unwrap();
-
   // to prevent the rescan from taking too long, mine 100 blocks to random address
   let random_address = Address::from_str("bcrt1p998q5wmfjdwxkxpjcrnsfytdgu24qazas9gcjdfzl2asq9s38qtsgl8men").unwrap();
   rpc_client.generate_to_address(100, &random_address).unwrap();
@@ -198,11 +197,11 @@ fn inscribe_child() {
 
   #[derive(Deserialize, Debug)]
   struct Output {
-    _commit: String,
+    commit: String,
     inscription: String,
-    _parent: Option<String>,
-    _reveal: String,
-    _fees: u64,
+    parent: Option<String>,
+    reveal: String,
+    fees: u64,
   }
 
   let output: Output = match ord(
@@ -217,7 +216,9 @@ fn inscribe_child() {
   };
   let parent_id = output.inscription;
 
+  thread::sleep(Duration::from_secs(1));
   rpc_client.generate_to_address(1, &address).unwrap();
+  thread::sleep(Duration::from_secs(1));
 
   fs::write(ord_data_dir.as_path().join("child.txt"), "Filius").unwrap();
   let output: Output = match ord(
