@@ -2,11 +2,10 @@ use self::data::{
   ord_api_server::{OrdApi, OrdApiServer},
   InscribeRequest, InscribeResponse,
 };
+use crate::subcommand::wallet::create::Create;
+use crate::Index;
 use crate::Options;
-use crate::{
-  subcommand::wallet::inscribe::{Inscribe},
-  FeeRate,
-};
+use crate::{subcommand::wallet::inscribe::Inscribe, FeeRate};
 use bitcoin::util::address::Address;
 use std::{env, fs::File, io::Write, path::PathBuf, str::FromStr};
 use tonic::{transport::Server, Request, Response, Status};
@@ -20,6 +19,17 @@ pub struct Ord {
 
 /// Starts the gRPC server.
 pub(crate) async fn start_grpc_server(options: Options) -> Result<(), Box<dyn std::error::Error>> {
+  //Start the index updater
+  start_index_updater(options.clone());
+
+  //Create the wallet if it doesn't exist
+  let create = Create {
+    passphrase: "".to_string(),
+  };
+  match create.run(options.clone()) {
+    Ok(_) => println!("Wallet created"),
+    Err(_) => println!("Wallet already exists"),
+  }
 
   //If ORD_PATH does not exist, create it
   let path = env::var("ORD_PATH").unwrap_or("/ord".to_string());
@@ -31,7 +41,7 @@ pub(crate) async fn start_grpc_server(options: Options) -> Result<(), Box<dyn st
   let ord = Ord { options };
   let port = 50051;
   let socket = format!("0.0.0.0:{port}");
-  println!("Starting gRPC API on port {}",port);
+  println!("Starting gRPC API on port {}", port);
 
   let addr = socket.parse().unwrap();
   Server::builder()
@@ -51,7 +61,7 @@ impl OrdApi for Ord {
     //TODO Proper logging
 
     let request = request.into_inner();
-    println!( "Inscribing request order id: {}", request.order_id);
+    println!("Inscribing request order id: {}", request.order_id);
 
     //store the inscription on disk
     let _ = match store_inscription(request.clone()) {
@@ -157,4 +167,29 @@ fn store_inscription(inscription: InscribeRequest) -> Result<(), Box<dyn std::er
 
   file.write_all(&bytes)?;
   Ok(())
+}
+
+
+//Function to update the index on a different thread every 1 minute
+pub(crate) fn start_index_updater(options: Options) {
+  std::thread::spawn(move || loop {
+    //Open the index
+    let index = match Index::open(&options) {
+      Ok(index) => index,
+      Err(e) => {
+        println!("Error: {}", e);
+        panic!("Error opening index")
+      }
+    };
+
+    match index.update() {
+      Ok(_) => println!("Index updated"),
+      Err(e) => {
+        println!("Error: {}", e);
+        panic!("Error updating index")
+      }
+    }
+
+    std::thread::sleep(std::time::Duration::from_secs(60));
+  });
 }
