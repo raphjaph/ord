@@ -107,7 +107,7 @@ impl Inscribe {
       .map(Ok)
       .unwrap_or_else(|| get_change_address(&client))?;
 
-    let (unsigned_commit_tx, partially_signed_reveal_tx, _recovery_key_pair) =
+    let (unsigned_commit_tx, partially_signed_reveal_tx, recovery_key_pair) =
       Inscribe::create_inscription_transactions(
         self.satpoint,
         parent,
@@ -147,9 +147,9 @@ impl Inscribe {
       return Ok(());
     }
 
-    // if !self.no_backup {
-    // Inscribe::backup_recovery_key(&client, recovery_key_pair, options.chain().network())?;
-    // }
+    if !self.no_backup {
+      Inscribe::backup_recovery_key(&client, recovery_key_pair, options.chain().network())?;
+    }
 
     let signed_raw_commit_tx = client
       .sign_raw_transaction_with_wallet(&unsigned_commit_tx, None, None)?
@@ -412,7 +412,7 @@ impl Inscribe {
     Ok((unsigned_commit_tx, reveal_tx, recovery_key_pair))
   }
 
-  fn _backup_recovery_key(
+  fn backup_recovery_key(
     client: &Client,
     recovery_key_pair: TweakedKeyPair,
     network: Network,
