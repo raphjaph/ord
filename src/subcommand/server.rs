@@ -1,3 +1,5 @@
+use serde_json::Value;
+
 use {
   self::{
     deserialize_from_str::DeserializeFromStr,
@@ -721,6 +723,69 @@ impl Server {
     Redirect::to("https://docs.ordinals.com/bounty/")
   }
 
+  fn get_parent_url_params_if_child_pointer(inscription: &Inscription) -> Option<String> {
+    if !inscription.get_parent_id().is_some() {
+      return None;
+    }
+
+    if !Self::valid_json(inscription.body()) {
+      return None;
+    }
+
+    let json_result: Result<Value, serde_json::Error> = serde_json::from_slice(&inscription.body().unwrap());
+    let json: Value = json_result.unwrap();
+
+    if !json.as_object().unwrap().contains_key("use_p") {
+      return None;
+    }
+
+    let parent_url_params = Self::get_url_params_from_json_value(json);
+
+    Some(parent_url_params)
+  }
+
+  fn valid_json(data: Option<&[u8]>) -> bool {
+    match data {
+      Some(bytes) => serde_json::from_slice::<Value>(bytes).is_ok(),
+      None => false,
+    }
+  }
+
+  fn get_url_params_from_json_value(json: Value) -> String {
+    let mut params_str = String::new();
+
+    if let Some(url_params_field) = json.get("params") {
+      if let Some(url_params) = url_params_field.as_array() {
+        let param_strs: Vec<&str> = url_params.into_iter().map(|v| v.as_str().unwrap()).collect();
+        params_str = param_strs.join("&");
+      }
+    }
+
+    if params_str.is_empty() {
+      return params_str;
+    }
+
+    format!("?{params_str}")
+  }
+
+  fn get_content_response_if_child_pointer(inscription: &Inscription) -> Option<ServerResult<Response>> {
+    let parent_url_params = Self::get_parent_url_params_if_child_pointer(inscription);
+    if let Some(url_params) = parent_url_params {
+      let redirect_uri = format!("/content/{}{}", inscription.get_parent_id().unwrap(), url_params);
+      return Some(Ok(Redirect::permanent(&redirect_uri).into_response()));
+    }
+    None
+  }
+
+  fn get_preview_response_if_child_pointer(inscription: &Inscription) -> Option<ServerResult<Response>> {
+    let parent_url_params = Self::get_parent_url_params_if_child_pointer(inscription);
+    if let Some(url_params) = parent_url_params {
+      let redirect_uri = format!("/preview/{}{}", inscription.get_parent_id().unwrap(), url_params);
+      return Some(Ok(Redirect::permanent(&redirect_uri).into_response()));
+    }
+    None
+  }
+
   async fn content(
     Extension(index): Extension<Arc<Index>>,
     Extension(config): Extension<Arc<Config>>,
@@ -733,6 +798,10 @@ impl Server {
     let inscription = index
       .get_inscription_by_id(inscription_id)?
       .ok_or_not_found(|| format!("inscription {inscription_id}"))?;
+
+    if let Some(response) = Self::get_content_response_if_child_pointer(&inscription) {
+      return response;
+    }
 
     Ok(
       Self::content_response(inscription)
@@ -776,6 +845,10 @@ impl Server {
     let inscription = index
       .get_inscription_by_id(inscription_id)?
       .ok_or_not_found(|| format!("inscription {inscription_id}"))?;
+
+    if let Some(response) = Self::get_preview_response_if_child_pointer(&inscription) {
+      return response;
+    }
 
     match inscription.media() {
       Media::Audio => Ok(PreviewAudioHtml { inscription_id }.into_response()),
@@ -983,6 +1056,12 @@ mod tests {
       Self::new_server(test_bitcoincore_rpc::spawn(), None, ord_args, server_args)
     }
 
+    fn new_with_bitcoin_rpc_server(
+      bitcoin_rpc_server: test_bitcoincore_rpc::Handle,
+    ) -> Self {
+      Self::new_server(bitcoin_rpc_server, None, &[], &[])
+    }
+
     fn new_with_bitcoin_rpc_server_and_config(
       bitcoin_rpc_server: test_bitcoincore_rpc::Handle,
       config: String,
@@ -1126,6 +1205,19 @@ mod tests {
         .unwrap();
 
       assert_eq!(response.status(), StatusCode::SEE_OTHER);
+      assert_eq!(response.headers().get(header::LOCATION).unwrap(), location);
+    }
+
+    fn assert_redirect_permanent(&self, path: &str, location: &str) {
+      let response = reqwest::blocking::Client::builder()
+        .redirect(reqwest::redirect::Policy::none())
+        .build()
+        .unwrap()
+        .get(self.join_url(path))
+        .send()
+        .unwrap();
+
+      assert_eq!(response.status(), StatusCode::PERMANENT_REDIRECT);
       assert_eq!(response.headers().get(header::LOCATION).unwrap(), location);
     }
 
@@ -2526,6 +2618,174 @@ mod tests {
       format!("/content/{inscription}"),
       StatusCode::OK,
       &fs::read_to_string("templates/preview-unknown.html").unwrap(),
+    );
+  }
+
+  #[test]
+  fn ord_pointer_child_inscription_redirect_to_parent_with_url_params() {
+    let bitcoin_rpc_server = test_bitcoincore_rpc::spawn();
+    bitcoin_rpc_server.mine_blocks(1);
+    let parent_txid = bitcoin_rpc_server.broadcast_tx(TransactionTemplate {
+      inputs: &[(1, 0, 0)],
+      witnesses: vec![inscription("text/plain;charset=utf-8", "hello").to_witness()],
+      ..Default::default()
+    });
+    let parent_inscription = InscriptionId::from(parent_txid);
+
+    bitcoin_rpc_server.mine_blocks(1);
+
+    let child_txid = bitcoin_rpc_server.broadcast_tx(TransactionTemplate {
+      inputs: &[(2, 1, 0), (2, 0, 0)],
+      witnesses: vec![
+        Witness::new(),
+        inscription_with_parent(
+          "application/json",
+          "{\"use_p\":1,\"params\":[\"tokenID=69\"]}",
+          parent_inscription
+        ).to_witness()
+      ],
+      ..Default::default()
+    });
+    let child_inscription = InscriptionId {
+      txid: child_txid,
+      index: 0,
+    };
+
+    bitcoin_rpc_server.mine_blocks(1);
+
+    let server = TestServer::new_with_bitcoin_rpc_server(bitcoin_rpc_server);
+
+    server.assert_redirect_permanent(
+      &format!("/preview/{child_inscription}"),
+      &format!("/preview/{parent_inscription}?tokenID=69")
+    );
+    server.assert_redirect_permanent(
+      &format!("/content/{child_inscription}"),
+      &format!("/content/{parent_inscription}?tokenID=69")
+    );
+  }
+
+  #[test]
+  fn ord_pointer_child_inscription_redirect_to_parent_without_url_params() {
+    let bitcoin_rpc_server = test_bitcoincore_rpc::spawn();
+    bitcoin_rpc_server.mine_blocks(1);
+    let parent_txid = bitcoin_rpc_server.broadcast_tx(TransactionTemplate {
+      inputs: &[(1, 0, 0)],
+      witnesses: vec![inscription("text/plain;charset=utf-8", "hello").to_witness()],
+      ..Default::default()
+    });
+    let parent_inscription = InscriptionId::from(parent_txid);
+
+    bitcoin_rpc_server.mine_blocks(1);
+
+    let child_txid = bitcoin_rpc_server.broadcast_tx(TransactionTemplate {
+      inputs: &[(2, 1, 0), (2, 0, 0)],
+      witnesses: vec![
+        Witness::new(),
+        inscription_with_parent(
+          "application/json",
+          "{\"use_p\":1}",
+          parent_inscription
+        ).to_witness()
+      ],
+      ..Default::default()
+    });
+    let child_inscription = InscriptionId {
+      txid: child_txid,
+      index: 0,
+    };
+
+    bitcoin_rpc_server.mine_blocks(1);
+
+    let server = TestServer::new_with_bitcoin_rpc_server(bitcoin_rpc_server);
+
+    server.assert_redirect_permanent(
+      &format!("/preview/{child_inscription}"),
+      &format!("/preview/{parent_inscription}")
+    );
+    server.assert_redirect_permanent(
+      &format!("/content/{child_inscription}"),
+      &format!("/content/{parent_inscription}")
+    );
+  }
+
+  #[test]
+  fn non_pointer_json_child_inscription_does_not_redirect_to_parent() {
+    let bitcoin_rpc_server = test_bitcoincore_rpc::spawn();
+    bitcoin_rpc_server.mine_blocks(1);
+    let parent_txid = bitcoin_rpc_server.broadcast_tx(TransactionTemplate {
+      inputs: &[(1, 0, 0)],
+      witnesses: vec![inscription("text/plain;charset=utf-8", "hello").to_witness()],
+      ..Default::default()
+    });
+    let parent_inscription = InscriptionId::from(parent_txid);
+
+    bitcoin_rpc_server.mine_blocks(1);
+
+    let child_txid = bitcoin_rpc_server.broadcast_tx(TransactionTemplate {
+      inputs: &[(2, 1, 0), (2, 0, 0)],
+      witnesses: vec![
+        Witness::new(),
+        inscription_with_parent(
+          "application/json",
+          "{\"not_ord_pointer\":1}",
+          parent_inscription
+        ).to_witness()
+      ],
+      ..Default::default()
+    });
+    let child_inscription = InscriptionId {
+      txid: child_txid,
+      index: 0,
+    };
+
+    bitcoin_rpc_server.mine_blocks(1);
+
+    let server = TestServer::new_with_bitcoin_rpc_server(bitcoin_rpc_server);
+
+    server.assert_response_csp(
+      format!("/preview/{}", child_inscription),
+      StatusCode::OK,
+      "default-src 'self'",
+      ".*<pre>\\{&quot;not_ord_pointer&quot;:1\\}</pre>.*",
+    );
+  }
+
+  #[test]
+  fn non_pointer_child_inscription_does_not_redirect_to_parent() {
+    let bitcoin_rpc_server = test_bitcoincore_rpc::spawn();
+    bitcoin_rpc_server.mine_blocks(1);
+    let parent_txid = bitcoin_rpc_server.broadcast_tx(TransactionTemplate {
+      inputs: &[(1, 0, 0)],
+      witnesses: vec![inscription("text/plain;charset=utf-8", "hello").to_witness()],
+      ..Default::default()
+    });
+    let parent_inscription = InscriptionId::from(parent_txid);
+
+    bitcoin_rpc_server.mine_blocks(1);
+
+    let child_txid = bitcoin_rpc_server.broadcast_tx(TransactionTemplate {
+      inputs: &[(2, 1, 0), (2, 0, 0)],
+      witnesses: vec![
+        Witness::new(),
+        inscription_with_parent("text/plain;charset=utf-8", "child", parent_inscription).to_witness(),
+      ],
+      ..Default::default()
+    });
+    let child_inscription = InscriptionId {
+      txid: child_txid,
+      index: 0,
+    };
+
+    bitcoin_rpc_server.mine_blocks(1);
+
+    let server = TestServer::new_with_bitcoin_rpc_server(bitcoin_rpc_server);
+
+    server.assert_response_csp(
+      format!("/preview/{}", child_inscription),
+      StatusCode::OK,
+      "default-src 'self'",
+      ".*<pre>child</pre>.*",
     );
   }
 }
