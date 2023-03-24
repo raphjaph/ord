@@ -786,4 +786,60 @@ mod tests {
       Err(InscriptionError::UnrecognizedEvenField),
     );
   }
+
+  #[test]
+  fn no_parent() {
+    assert_eq!(
+      InscriptionParser::parse(&envelope(&[b"ord", &[1], b"image/png", &[], b"foo", ])),
+      Ok(Inscription {
+        parent: None,
+        content_type: Some(b"image/png".to_vec()),
+        body: Some(b"foo".to_vec()),
+      }),
+    );
+  }
+
+  #[test]
+  fn ignore_empty_parent() {
+    assert_eq!(
+      InscriptionParser::parse(&envelope(&[b"ord", &[1], b"image/png", &[3], &[], &[], b"foo", ])),
+      Ok(Inscription {
+        parent: None,
+        content_type: Some(b"image/png".to_vec()),
+        body: Some(b"foo".to_vec()),
+      }),
+    );
+  }
+
+  #[test]
+  fn ignore_invalid_parent() {
+    assert_eq!(
+      InscriptionParser::parse(&envelope(&[b"ord", &[1], b"image/png", &[3], &[0; 19], &[], b"foo", ])),
+      Ok(Inscription {
+        parent: None,
+        content_type: Some(b"image/png".to_vec()),
+        body: Some(b"foo".to_vec()),
+      }),
+    );
+    assert_eq!(
+      InscriptionParser::parse(&envelope(&[b"ord", &[1], b"image/png", &[3], &[0; 37], &[], b"foo", ])),
+      Ok(Inscription {
+        parent: None,
+        content_type: Some(b"image/png".to_vec()),
+        body: Some(b"foo".to_vec()),
+      }),
+    );
+  }
+
+  #[test]
+  fn parse_valid_parent() {
+    assert_eq!(
+      InscriptionParser::parse(&envelope(&[b"ord", &[1], b"image/png", &[3], &[0; 36], &[], b"foo", ])),
+      Ok(Inscription {
+        parent: Some(InscriptionId::load([0; 36])),
+        content_type: Some(b"image/png".to_vec()),
+        body: Some(b"foo".to_vec()),
+      }),
+    );
+  }
 }
