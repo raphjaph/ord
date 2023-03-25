@@ -12,14 +12,19 @@ use tonic::{transport::Server, Request, Response, Status};
 pub mod data {
   tonic::include_proto!("ordinals");
 }
+use lazy_static::lazy_static;
+use std::sync::Mutex;
+
+lazy_static! {
+  static ref INSCRIBE_MUTEX: Mutex<()> = Mutex::new(());
+}
 
 pub struct Ord {
   options: Options,
 }
 
 /// Starts the gRPC server.
-pub(crate) async fn start_grpc_server(options: Options) -> Result<(), Box<dyn std::error::Error>> { 
-
+pub(crate) async fn start_grpc_server(options: Options) -> Result<(), Box<dyn std::error::Error>> {
   println!("options: {:?}", options);
 
   //Create the wallet if it doesn't exist
@@ -109,11 +114,31 @@ impl OrdApi for Ord {
       };
     }
 
-    let output = match inscribe.run_output(self.options.clone()) {
-      Ok(output) => output.unwrap(),
+    let options = self.options.clone();
+
+    let output_option = match tokio::task::spawn_blocking(|| {
+      // Perform the blocking operation here
+      let mutex_guard = INSCRIBE_MUTEX.lock().unwrap();
+
+      inscribe.run_output(options)
+    })
+    .await
+    .unwrap()
+    {
+      Ok(output_option) => output_option,
       Err(e) => {
         println!("Error: {}", e);
         return Err(Status::internal(e.to_string()));
+      }
+    };
+
+    //Get the output
+
+    let output = match output_option {
+      Some(output) => output,
+      None => {
+        println!("Error: Output is None");
+        return Err(Status::internal("Output is None".to_string()));
       }
     };
 
@@ -167,29 +192,4 @@ fn store_inscription(inscription: InscribeRequest) -> Result<(), Box<dyn std::er
 
   file.write_all(&bytes)?;
   Ok(())
-}
-
-
-//Function to update the index on a different thread every 1 minute
-pub(crate) fn start_index_updater(options: Options) {
-  std::thread::spawn(move || loop {
-    //Open the index
-    let index = match Index::open(&options) {
-      Ok(index) => index,
-      Err(e) => {
-        println!("Error: {}", e);
-        panic!("Error opening index")
-      }
-    };
-
-    match index.update() {
-      Ok(_) => println!("Index updated"),
-      Err(e) => {
-        println!("Error: {}", e);
-        panic!("Error updating index, {}", e);
-      }
-    }
-
-    std::thread::sleep(std::time::Duration::from_secs(60));
-  });
 }
