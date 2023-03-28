@@ -12,13 +12,7 @@ use tonic::{transport::Server, Request, Response, Status};
 pub mod data {
   tonic::include_proto!("ordinals");
 }
-use lazy_static::lazy_static;
-use std::sync::Mutex;
-
-lazy_static! {
-  static ref INSCRIBE_MUTEX: Mutex<()> = Mutex::new(());
-}
-
+mod mutex;
 pub struct Ord {
   options: Options,
 }
@@ -26,6 +20,8 @@ pub struct Ord {
 /// Starts the gRPC server.
 pub(crate) async fn start_grpc_server(options: Options) -> Result<(), Box<dyn std::error::Error>> {
   println!("options: {:?}", options);
+
+  start_index_updater(options.clone());
 
   //Create the wallet if it doesn't exist
   let create = Create {
@@ -44,7 +40,7 @@ pub(crate) async fn start_grpc_server(options: Options) -> Result<(), Box<dyn st
   }
 
   let ord = Ord { options };
-  let port = 50051;
+  let port = 50052;
   let socket = format!("0.0.0.0:{port}");
   println!("Starting gRPC API on port {}", port);
 
@@ -118,8 +114,7 @@ impl OrdApi for Ord {
 
     let output_option = match tokio::task::spawn_blocking(|| {
       // Perform the blocking operation here
-      let mutex_guard = INSCRIBE_MUTEX.lock().unwrap();
-
+      let mutex_guard = mutex::lock_inscribe();
       inscribe.run_output(options)
     })
     .await
@@ -191,5 +186,40 @@ fn store_inscription(inscription: InscribeRequest) -> Result<(), Box<dyn std::er
   }
 
   file.write_all(&bytes)?;
+
   Ok(())
+}
+
+//Function to update the index on a different thread every 1 minute
+pub(crate) fn start_index_updater(options: Options) {
+  tokio::task::spawn_blocking(move || loop {
+    //Lock the mutex
+    let mutex_guard = mutex::lock_inscribe();
+
+    //Open the index
+    let index = match Index::open(&options) {
+      Ok(index) => index,
+      Err(e) => {
+        println!("Error: {}", e);
+        panic!("Error opening index")
+      }
+    };
+
+    match index.update() {
+      Ok(_) => {
+        println!("Index updated");
+      }
+      Err(e) => {
+        println!("Error: {}", e);
+        panic!("Error updating index, {}", e);
+      }
+    }
+
+    //Unlock the mutex
+    drop(mutex_guard);
+    drop(index);
+    
+    std::thread::sleep(std::time::Duration::from_secs(60));
+
+  });
 }
