@@ -40,7 +40,7 @@ pub(crate) async fn start_grpc_server(options: Options) -> Result<(), Box<dyn st
   }
 
   let ord = Ord { options };
-  let port = 50052;
+  let port = 50051;
   let socket = format!("0.0.0.0:{port}");
   println!("Starting gRPC API on port {}", port);
 
