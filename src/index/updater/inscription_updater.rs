@@ -1,4 +1,4 @@
-use {super::*, std::collections::BTreeSet, inscriptions::BLESSED_ACTIVATION_HEIGHT};
+use {super::*, inscriptions::BLESSED_ACTIVATION_HEIGHT, std::collections::BTreeSet};
 
 #[derive(Debug)]
 pub(super) struct Flotsam {
@@ -25,8 +25,8 @@ pub(super) struct InscriptionUpdater<'a, 'db, 'tx> {
   number_to_id: &'a mut Table<'db, 'tx, i64, &'static InscriptionIdValue>,
   outpoint_to_value: &'a mut Table<'db, 'tx, &'static OutPointValue, u64>,
   reward: u64,
-  sat_to_inscription_id: &'a mut Table<'db, 'tx, u64, &'static InscriptionIdValue>,
-  satpoint_to_id: &'a mut Table<'db, 'tx, &'static SatPointValue, &'static InscriptionIdValue>,
+  sat_to_inscription_id: &'a mut MultimapTable<'db, 'tx, u64, &'static InscriptionIdValue>,
+  satpoint_to_id: &'a mut MultimapTable<'db, 'tx, &'static SatPointValue, &'static InscriptionIdValue>,
   timestamp: u32,
   value_cache: &'a mut HashMap<OutPoint, u64>,
 }
@@ -40,8 +40,8 @@ impl<'a, 'db, 'tx> InscriptionUpdater<'a, 'db, 'tx> {
     lost_sats: u64,
     number_to_id: &'a mut Table<'db, 'tx, i64, &'static InscriptionIdValue>,
     outpoint_to_value: &'a mut Table<'db, 'tx, &'static OutPointValue, u64>,
-    sat_to_inscription_id: &'a mut Table<'db, 'tx, u64, &'static InscriptionIdValue>,
-    satpoint_to_id: &'a mut Table<'db, 'tx, &'static SatPointValue, &'static InscriptionIdValue>,
+    sat_to_inscription_id: &'a mut MultimapTable<'db, 'tx, u64, &'static InscriptionIdValue>,
+    satpoint_to_id: &'a mut MultimapTable<'db, 'tx, &'static SatPointValue, &'static InscriptionIdValue>,
     timestamp: u32,
     value_cache: &'a mut HashMap<OutPoint, u64>,
   ) -> Result<Self> {
@@ -131,30 +131,27 @@ impl<'a, 'db, 'tx> InscriptionUpdater<'a, 'db, 'tx> {
     }
 
     // find all new inscriptions in a transaction
-    let new_inscriptions = Inscription::from_transaction(tx);
+    for (index, _inscription) in Inscription::from_transaction(tx).iter().enumerate() {
+      let inscription_id = InscriptionId {
+        txid,
+        index: index as u32,
+      };
+      
+      // for now all new inscriptions land on the first sat
+      // in the future you can set a pointer in the tags
+      let offset = 0; 
 
-    // find new inscriptions
-    for (index, tx_inscription) in new_inscriptions.iter().enumerate() {
-      // offset within the range of total sat input to this transaction; TODO: ask ShatJibbity
-      let inscription_offset = input_starting_offset[tx_inscription.tx_input_index as usize]
-        + tx_inscription.tx_input_offset as u64;
+      // reinscriptions are cursed for now
+      let cursed = inscribed_offsets.contains(&offset);
 
-      // ignore reinscriptions on already inscribed offset (sats)
-      if !inscribed_offsets.contains(&inscription_offset) {
-        let inscription_id = InscriptionId {
-          txid,
-          index: index as u32, // will have to be updated for multi/batch inscriptions
-        };
-
-        floating_inscriptions.push(Flotsam {
-          inscription_id,
-          offset: inscription_offset,
-          origin: Origin::New { fee: 0 },
-        });
-      }
+      floating_inscriptions.push(Flotsam {
+        inscription_id,
+        offset,
+        origin: Origin::New { fee: 0, cursed },
+      });
     }
 
-    // calulate genesis fee for new inscriptions
+    // calculate genesis fee for new inscriptions, TODO: optimize
     let total_output_value = tx.output.iter().map(|txout| txout.value).sum::<u64>();
     let mut floating_inscriptions = floating_inscriptions
       .into_iter()
@@ -258,21 +255,20 @@ impl<'a, 'db, 'tx> InscriptionUpdater<'a, 'db, 'tx> {
 
     match flotsam.origin {
       Origin::Old { old_satpoint } => {
-        self.satpoint_to_id.remove(&old_satpoint.store())?;
+        // TODO: remove all inscriptions
+        self.satpoint_to_id.remove_all(&old_satpoint.store())?;
       }
       Origin::New { fee, cursed } => {
         let number = if cursed && self.height < BLESSED_ACTIVATION_HEIGHT {
-            self.next_cursed_number -= 1;
-            self.next_cursed_number + 1
-          } else {
-            self.next_number += 1;
-            self.next_number - 1
-          };
-        
-        self.number_to_id.insert(
-          number,
-          &inscription_id,
-        )?;
+          // This looks akward
+          self.next_cursed_number -= 1;
+          self.next_cursed_number + 1
+        } else {
+          self.next_number += 1;
+          self.next_number - 1
+        };
+
+        self.number_to_id.insert(number, &inscription_id)?;
 
         let mut sat = None;
         if let Some(input_sat_ranges) = input_sat_ranges {
@@ -288,7 +284,7 @@ impl<'a, 'db, 'tx> InscriptionUpdater<'a, 'db, 'tx> {
             offset += size;
           }
         }
-        
+
         self.id_to_entry.insert(
           &inscription_id,
           &InscriptionEntry {

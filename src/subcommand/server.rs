@@ -380,7 +380,7 @@ impl Server {
         sat,
         satpoint,
         blocktime: index.blocktime(sat.height())?,
-        inscription: index.get_inscription_id_by_sat(sat)?,
+        inscriptions: index.get_inscription_id_by_sat(sat)?,
       }
       .page(page_config, index.has_sat_index()?),
     )

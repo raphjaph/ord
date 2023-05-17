@@ -13,7 +13,10 @@ use {
   chrono::SubsecRound,
   indicatif::{ProgressBar, ProgressStyle},
   log::log_enabled,
-  redb::{Database, ReadableTable, Table, TableDefinition, WriteStrategy, WriteTransaction},
+  redb::{
+    Database, MultimapTable, MultimapTableDefinition, ReadableMultimapTable, ReadableTable, Table,
+    TableDefinition, WriteStrategy, WriteTransaction,
+  },
   std::collections::HashMap,
   std::sync::atomic::{self, AtomicBool},
 };
@@ -31,14 +34,21 @@ macro_rules! define_table {
   };
 }
 
+macro_rules! define_multimap_table {
+  ($name:ident, $key:ty, $value:ty) => {
+    const $name: MultimapTableDefinition<$key, $value> =
+      MultimapTableDefinition::new(stringify!($name));
+  };
+}
+
 define_table! { HEIGHT_TO_BLOCK_HASH, u64, &BlockHashValue }
 define_table! { INSCRIPTION_ID_TO_INSCRIPTION_ENTRY, &InscriptionIdValue, InscriptionEntryValue }
 define_table! { INSCRIPTION_ID_TO_SATPOINT, &InscriptionIdValue, &SatPointValue }
 define_table! { INSCRIPTION_NUMBER_TO_INSCRIPTION_ID, i64, &InscriptionIdValue }
 define_table! { OUTPOINT_TO_SAT_RANGES, &OutPointValue, &[u8] }
 define_table! { OUTPOINT_TO_VALUE, &OutPointValue, u64}
-define_table! { SATPOINT_TO_INSCRIPTION_ID, &SatPointValue, &InscriptionIdValue }
-define_table! { SAT_TO_INSCRIPTION_ID, u64, &InscriptionIdValue }
+define_multimap_table! { SATPOINT_TO_INSCRIPTION_ID, &SatPointValue, &InscriptionIdValue} // TODO: multimaps
+define_multimap_table! { SAT_TO_INSCRIPTION_ID, u64, &InscriptionIdValue } // TODO: multimap
 define_table! { SAT_TO_SATPOINT, u64, &SatPointValue }
 define_table! { STATISTIC_TO_COUNT, u64, u64 }
 define_table! { WRITE_TRANSACTION_STARTING_BLOCK_COUNT_TO_TIMESTAMP, u64, u128 }
@@ -196,8 +206,8 @@ impl Index {
         tx.open_table(INSCRIPTION_ID_TO_SATPOINT)?;
         tx.open_table(INSCRIPTION_NUMBER_TO_INSCRIPTION_ID)?;
         tx.open_table(OUTPOINT_TO_VALUE)?;
-        tx.open_table(SATPOINT_TO_INSCRIPTION_ID)?;
-        tx.open_table(SAT_TO_INSCRIPTION_ID)?;
+        tx.open_multimap_table(SATPOINT_TO_INSCRIPTION_ID)?;
+        tx.open_multimap_table(SAT_TO_INSCRIPTION_ID)?;
         tx.open_table(SAT_TO_SATPOINT)?;
         tx.open_table(WRITE_TRANSACTION_STARTING_BLOCK_COUNT_TO_TIMESTAMP)?;
 
@@ -484,14 +494,15 @@ impl Index {
     self.client.get_block(&hash).into_option()
   }
 
-  pub(crate) fn get_inscription_id_by_sat(&self, sat: Sat) -> Result<Option<InscriptionId>> {
+  pub(crate) fn get_inscription_id_by_sat(&self, sat: Sat) -> Result<Vec<InscriptionId>> {
     Ok(
       self
         .database
         .begin_read()?
-        .open_table(SAT_TO_INSCRIPTION_ID)?
+        .open_multimap_table(SAT_TO_INSCRIPTION_ID)?
         .get(&sat.n())?
-        .map(|inscription_id| Entry::load(*inscription_id.value())),
+        .map(|inscription_id| Entry::load(*inscription_id.value()))
+        .collect(),
     )
   }
 
@@ -540,7 +551,7 @@ impl Index {
     Ok(self.get_transaction(inscription_id.txid)?.and_then(|tx| {
       Inscription::from_transaction(&tx)
         .get(inscription_id.index as usize)
-        .map(|transaction_inscription| transaction_inscription.inscription.clone())
+        .map(|inscription| inscription.clone())
     }))
   }
 
@@ -553,7 +564,7 @@ impl Index {
         &self
           .database
           .begin_read()?
-          .open_table(SATPOINT_TO_INSCRIPTION_ID)?,
+          .open_multimap_table(SATPOINT_TO_INSCRIPTION_ID)?,
         outpoint,
       )?
       .map(|(_satpoint, inscription_id)| inscription_id)
@@ -700,9 +711,11 @@ impl Index {
       self
         .database
         .begin_read()?
-        .open_table(SATPOINT_TO_INSCRIPTION_ID)?
+        .open_multimap_table(SATPOINT_TO_INSCRIPTION_ID)?
         .range::<&[u8; 44]>(&[0; 44]..)?
-        .map(|(satpoint, id)| (Entry::load(*satpoint.value()), Entry::load(*id.value())))
+        .flat_map(|(satpoint, id_iter)| {
+          id_iter.map(move |id| (Entry::load(*satpoint.value()), Entry::load(*id.value())))
+        })
         .take(n.unwrap_or(usize::MAX))
         .collect(),
     )
@@ -805,7 +818,7 @@ impl Index {
   ) {
     let rtx = self.database.begin_read().unwrap();
 
-    let satpoint_to_inscription_id = rtx.open_table(SATPOINT_TO_INSCRIPTION_ID).unwrap();
+    let satpoint_to_inscription_id = rtx.open_multimap_table(SATPOINT_TO_INSCRIPTION_ID).unwrap();
 
     let inscription_id_to_satpoint = rtx.open_table(INSCRIPTION_ID_TO_SATPOINT).unwrap();
 
@@ -825,30 +838,18 @@ impl Index {
       satpoint,
     );
 
-    assert_eq!(
-      InscriptionId::load(
-        *satpoint_to_inscription_id
-          .get(&satpoint.store())
-          .unwrap()
-          .unwrap()
-          .value()
-      ),
-      inscription_id,
-    );
+    assert!(satpoint_to_inscription_id
+      .get(&satpoint.store())
+      .unwrap()
+      .any(|id| InscriptionId::load(*id.value()) == inscription_id));
 
     if self.has_sat_index().unwrap() {
-      assert_eq!(
-        InscriptionId::load(
-          *rtx
-            .open_table(SAT_TO_INSCRIPTION_ID)
-            .unwrap()
-            .get(&sat)
-            .unwrap()
-            .unwrap()
-            .value()
-        ),
-        inscription_id,
-      );
+      assert!(rtx
+        .open_multimap_table(SAT_TO_INSCRIPTION_ID)
+        .unwrap()
+        .get(&sat)
+        .unwrap()
+        .any(|id| InscriptionId::load(*id.value()) == inscription_id));
 
       if !Sat(sat).is_common() {
         assert_eq!(
@@ -868,7 +869,7 @@ impl Index {
   }
 
   fn inscriptions_on_output<'a: 'tx, 'tx>(
-    satpoint_to_id: &'a impl ReadableTable<&'static SatPointValue, &'static InscriptionIdValue>,
+    satpoint_to_id: &'a impl ReadableMultimapTable<&'static SatPointValue, &'static InscriptionIdValue>,
     outpoint: OutPoint,
   ) -> Result<impl Iterator<Item = (SatPoint, InscriptionId)> + 'tx> {
     let start = SatPoint {
@@ -886,7 +887,9 @@ impl Index {
     Ok(
       satpoint_to_id
         .range::<&[u8; 44]>(&start..=&end)?
-        .map(|(satpoint, id)| (Entry::load(*satpoint.value()), Entry::load(*id.value()))),
+        .flat_map(|(satpoint, id_iter)| {
+          id_iter.map(move |id| (Entry::load(*satpoint.value()), Entry::load(*id.value())))
+        }),
     )
   }
 }

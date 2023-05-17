@@ -159,7 +159,7 @@ impl<'a> InscriptionParser<'a> {
 
 #[cfg(test)]
 mod tests {
-  use {super::*, inscriptions::inscription::TransactionInscription};
+  use super::*;
 
   fn envelope(payload: &[&[u8]]) -> Witness {
     let mut builder = script::Builder::new()
@@ -463,11 +463,7 @@ mod tests {
 
     assert_eq!(
       Inscription::from_transaction(&tx),
-      vec![TransactionInscription {
-        inscription: inscription("text/plain;charset=utf-8", "ord"),
-        tx_input_index: 0,
-        tx_input_offset: 0
-      }],
+      vec![inscription("text/plain;charset=utf-8", "ord")],
     );
   }
 
@@ -529,45 +525,14 @@ mod tests {
     if after_blessing {
       assert_eq!(
         Inscription::from_transaction(&tx),
-        vec![
-          TransactionInscription {
-            parsed_inscription: ParsedInscription {
-              cursed: false,
-              inscription: inscription("foo", [1; 100]),
-            },
-            tx_input_index: 0,
-            tx_input_offset: 0
-          },
-          TransactionInscription {
-            parsed_inscription: ParsedInscription {
-              cursed: false,
-              inscription: inscription("bar", [1; 100]),
-            },
-            tx_input_index: 0,
-            tx_input_offset: 1
-          }
-        ]
+        vec![inscription("foo", [1; 100]), inscription("bar", [1; 100])]
       );
     } else {
       assert_eq!(
         Inscription::from_transaction(&tx),
         vec![
-          TransactionInscription {
-            parsed_inscription: ParsedInscription {
-              cursed: false,
-              inscription: inscription("foo", [1; 100]),
-            },
-            tx_input_index: 0,
-            tx_input_offset: 0
-          },
-          TransactionInscription {
-            parsed_inscription: ParsedInscription {
-              cursed: true,
-              inscription: inscription("bar", [1; 100]),
-            },
-            tx_input_index: 0,
-            tx_input_offset: 1
-          }
+          // cursed_inscription("foo", [1; 100]),
+          // cursed_inscription("bar", [1; 100])
         ]
       );
     }

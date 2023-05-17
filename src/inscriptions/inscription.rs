@@ -1,13 +1,6 @@
 use super::*;
 
 #[derive(Debug, PartialEq, Clone)]
-pub(crate) struct TransactionInscription {
-  pub(crate) inscription: Inscription,
-  pub(crate) tx_input_index: u32,
-  pub(crate) tx_input_offset: u32,
-}
-
-#[derive(Debug, PartialEq, Clone)]
 pub(crate) struct Inscription {
   pub(crate) body: Option<Vec<u8>>,
   pub(crate) content_type: Option<Vec<u8>>,
@@ -16,27 +9,17 @@ pub(crate) struct Inscription {
 impl Inscription {
   #[cfg(test)]
   pub(crate) fn new(content_type: Option<Vec<u8>>, body: Option<Vec<u8>>) -> Self {
-    Self { content_type, body }
+    Self {
+      content_type,
+      body,
+    }
   }
 
-  pub(crate) fn from_transaction(tx: &Transaction) -> Vec<TransactionInscription> {
+  pub(crate) fn from_transaction(tx: &Transaction) -> Vec<Inscription> {
     let mut result = Vec::new();
     for (index, tx_in) in tx.input.iter().enumerate() {
-      // if index != 0 { break }; // TODO: If before activation block height
-
       let Ok(inscriptions) = InscriptionParser::parse(&tx_in.witness) else { continue };
-
-      result.extend(
-        inscriptions
-          .into_iter()
-          .enumerate()
-          .map(|(offset, inscription)| TransactionInscription {
-            inscription,
-            tx_input_index: index as u32,
-            tx_input_offset: offset as u32,
-          })
-          .collect::<Vec<TransactionInscription>>(),
-      )
+      result.extend(inscriptions);
     }
 
     result

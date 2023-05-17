@@ -100,6 +100,14 @@ pub(crate) fn tx_out(value: u64, address: Address) -> TxOut {
   }
 }
 
+// pub(crate) fn cursed_inscription(content_type: &str, body: impl AsRef<[u8]>) -> Inscription {
+  // Inscription {
+    // content_type: Some(content_type.into()),
+    // body: Some(body.as_ref().into()),
+    // cursed: true,
+  // }
+// }
+
 pub(crate) fn inscription(content_type: &str, body: impl AsRef<[u8]>) -> Inscription {
   Inscription::new(Some(content_type.into()), Some(body.as_ref().into()))
 }
