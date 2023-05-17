@@ -2060,7 +2060,7 @@ mod tests {
   }
 
   #[test]
-  fn inscriptions_on_same_sat_after_the_first_are_ignored() {
+  fn reinscriptions_on_same_sat_allowed() {
     for context in Context::configurations() {
       context.mine_blocks(1);
 
@@ -2121,13 +2121,13 @@ mod tests {
         .index
         .get_inscription_entry(second.into())
         .unwrap()
-        .is_none());
+        .is_some());
 
       assert!(context
         .index
         .get_inscription_by_id(second.into())
         .unwrap()
-        .is_none());
+        .is_some());
     }
   }
 
@@ -2220,7 +2220,7 @@ mod tests {
   }
 
   #[test]
-  fn cursed_inscriptions_are_tracked() {
+  fn cursed_inscriptions_are_tracked_and_reinscribed() {
     for context in Context::configurations() {
       context.mine_blocks(1);
 
@@ -2257,18 +2257,18 @@ mod tests {
         inscription_id_1,
         SatPoint {
           outpoint: OutPoint { txid, vout: 0 },
-          offset: 1,
+          offset: 0,
         },
-        50 * COIN_VALUE + 1,
+        50 * COIN_VALUE,
       );
 
       context.index.assert_inscription_location(
         inscription_id_2,
         SatPoint {
           outpoint: OutPoint { txid, vout: 0 },
-          offset: 2,
+          offset: 0,
         },
-        50 * COIN_VALUE + 2,
+        50 * COIN_VALUE,
       );
 
       assert!(

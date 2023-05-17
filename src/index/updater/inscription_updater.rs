@@ -142,7 +142,7 @@ impl<'a, 'db, 'tx> InscriptionUpdater<'a, 'db, 'tx> {
       let offset = 0; 
 
       // reinscriptions are cursed for now
-      let cursed = inscribed_offsets.contains(&offset);
+      let cursed = inscribed_offsets.contains(&offset) || index != 0;
 
       floating_inscriptions.push(Flotsam {
         inscription_id,

@@ -368,7 +368,7 @@ mod tests {
   }
 
   #[test]
-  fn valid_ignore_inscriptions_after_first() {
+  fn allow_inscriptions_after_first() {
     let script = script::Builder::new()
       .push_opcode(opcodes::OP_FALSE)
       .push_opcode(opcodes::all::OP_IF)
@@ -390,7 +390,10 @@ mod tests {
 
     assert_eq!(
       InscriptionParser::parse(&Witness::from_vec(vec![script.into_bytes(), Vec::new()])),
-      Ok(vec![inscription("text/plain;charset=utf-8", "foo")]),
+      Ok(vec![
+        inscription("text/plain;charset=utf-8", "foo"),
+        inscription("text/plain;charset=utf-8", "bar")
+      ]),
     );
   }
 
@@ -530,10 +533,7 @@ mod tests {
     } else {
       assert_eq!(
         Inscription::from_transaction(&tx),
-        vec![
-          // cursed_inscription("foo", [1; 100]),
-          // cursed_inscription("bar", [1; 100])
-        ]
+        vec![inscription("foo", [1; 100]), inscription("bar", [1; 100])]
       );
     }
   }
@@ -646,10 +646,13 @@ mod tests {
   }
 
   #[test]
-  fn unknown_even_fields_are_invalid() {
+  fn unknown_even_fields_are_valid() {
     assert_eq!(
       InscriptionParser::parse(&envelope(&[b"ord", &[2], &[0]])),
-      Err(InscriptionError::UnrecognizedEvenField),
+      Ok(vec![Inscription {
+        content_type: None,
+        body: None
+      }]),
     );
   }
 }
