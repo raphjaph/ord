@@ -62,7 +62,7 @@ impl Inscription {
     })
   }
 
-  pub(super) fn append_reveal_script_to_builder(
+  pub(crate) fn append_reveal_script_to_builder(
     &self,
     mut builder: script::Builder,
   ) -> script::Builder {

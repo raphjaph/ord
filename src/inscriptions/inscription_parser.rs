@@ -16,14 +16,6 @@ pub(crate) struct InscriptionParser<'a> {
   instructions: Peekable<Instructions<'a>>,
 }
 
-struct Envelope<'a> {
-  contents: Vec<Instruction<'a>>,
-}
-
-struct EnvelopeParser<'a> {
-  instructions: Peekable<Instructions<'a>>,
-}
-
 impl<'a> InscriptionParser<'a> {
   pub(crate) fn parse(witness: &Witness) -> Result<Vec<Inscription>> {
     if witness.is_empty() {
@@ -101,11 +93,12 @@ impl<'a> InscriptionParser<'a> {
 
     let body = fields.remove(BODY_TAG);
     let content_type = fields.remove(CONTENT_TYPE_TAG);
+    let mut cursed = false;
 
     for tag in fields.keys() {
       if let Some(lsb) = tag.first() {
         if lsb % 2 == 0 {
-          return Err(InscriptionError::UnrecognizedEvenField);
+          cursed = true;
         }
       }
     }
@@ -480,6 +473,10 @@ mod tests {
 
   #[test]
   fn do_not_extract_from_second_input() {
+    do_not_extract_from_second_input_helper(false);
+  }
+
+  fn do_not_extract_from_second_input_helper(after_blessing: bool) {
     let tx = Transaction {
       version: 0,
       lock_time: bitcoin::PackedLockTime(0),
@@ -500,11 +497,17 @@ mod tests {
       output: Vec::new(),
     };
 
-    assert_eq!(Inscription::from_transaction(&tx), vec![]);
+    if after_blessing {
+      assert_eq!(Inscription::from_transaction(&tx), vec![]);
+    }
   }
 
   #[test]
   fn do_not_extract_from_second_envelope() {
+    do_not_extract_from_second_envelope_helper(false);
+  }
+
+  fn do_not_extract_from_second_envelope_helper(after_blessing: bool) {
     let mut builder = script::Builder::new();
     builder = inscription("foo", [1; 100]).append_reveal_script_to_builder(builder);
     builder = inscription("bar", [1; 100]).append_reveal_script_to_builder(builder);
@@ -523,14 +526,51 @@ mod tests {
       output: Vec::new(),
     };
 
-    assert_eq!(
-      Inscription::from_transaction(&tx),
-      vec![TransactionInscription {
-        inscription: inscription("foo", [1; 100]),
-        tx_input_index: 0,
-        tx_input_offset: 0
-      }]
-    );
+    if after_blessing {
+      assert_eq!(
+        Inscription::from_transaction(&tx),
+        vec![
+          TransactionInscription {
+            parsed_inscription: ParsedInscription {
+              cursed: false,
+              inscription: inscription("foo", [1; 100]),
+            },
+            tx_input_index: 0,
+            tx_input_offset: 0
+          },
+          TransactionInscription {
+            parsed_inscription: ParsedInscription {
+              cursed: false,
+              inscription: inscription("bar", [1; 100]),
+            },
+            tx_input_index: 0,
+            tx_input_offset: 1
+          }
+        ]
+      );
+    } else {
+      assert_eq!(
+        Inscription::from_transaction(&tx),
+        vec![
+          TransactionInscription {
+            parsed_inscription: ParsedInscription {
+              cursed: false,
+              inscription: inscription("foo", [1; 100]),
+            },
+            tx_input_index: 0,
+            tx_input_offset: 0
+          },
+          TransactionInscription {
+            parsed_inscription: ParsedInscription {
+              cursed: true,
+              inscription: inscription("bar", [1; 100]),
+            },
+            tx_input_index: 0,
+            tx_input_offset: 1
+          }
+        ]
+      );
+    }
   }
 
   #[test]
