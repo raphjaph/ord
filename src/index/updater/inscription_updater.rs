@@ -129,6 +129,7 @@ impl<'a, 'db, 'tx> InscriptionUpdater<'a, 'db, 'tx> {
 
     let (inscription, cursed, unbound) = match Inscription::from_transaction(tx) {
       Ok(inscription) => (Some(inscription), false, false),
+      Err(InscriptionError::ManuallyCursed(inscription)) => (Some(inscription), true, false),
       Err(InscriptionError::UnrecognizedEvenField(inscription)) => (Some(inscription), true, true),
       _ => (None, false, false),
     };
