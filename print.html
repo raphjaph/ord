@@ -1046,7 +1046,8 @@ explorer on mainnet at <a href="https://ordinals.com">ordinals.com</a>, and on s
 <p><code>ord server</code></p>
 <p>To specify a port add the <code>--http-port</code> flag:</p>
 <p><code>ord server --http-port 8080</code></p>
-<p>To enable the JSON-API endpoints add the <code>--enable-json-api</code> or <code>-e</code> flag:</p>
+<p>To enable the JSON-API endpoints add the <code>--enable-json-api</code> or <code>-j</code> flag (see
+<a href="guides/explorer.html#json-api">here</a> for more info):</p>
 <p><code>ord --enable-json-api server</code></p>
 <p>To test how your inscriptions will look you can run:</p>
 <p><code>ord preview &lt;FILE1&gt; &lt;FILE2&gt; ...</code></p>
@@ -1077,6 +1078,40 @@ difficulty adjustment, and offset within their block:</p>
 <p>Or by percentile, the percentage of bitcoin's supply that has been or will have
 been issued when they are mined:</p>
 <p><a href="https://ordinals.com/search/100%">100%</a></p>
+<h2 id="json-api"><a class="header" href="#json-api">JSON-API</a></h2>
+<p>You can run <code>ord</code> with the <code>--enable-json-api</code> flag to access endpoints that
+return JSON instead of HTML if you set the HTTP <code>Accept: application/json</code>
+header. The structure of theses objects closely follows
+what is shown in the HTML. These endpoints are:</p>
+<ul>
+<li><code>/inscription/&lt;INSCRIPTION_ID&gt;</code></li>
+<li><code>/inscriptions</code></li>
+<li><code>/inscriptions/block/&lt;BLOCK_HEIGHT&gt;</code></li>
+<li><code>/inscriptions/block/&lt;BLOCK_HEIGHT&gt;/&lt;PAGE_INDEX&gt;</code></li>
+<li><code>/inscriptions/&lt;FROM&gt;</code></li>
+<li><code>/inscriptions/&lt;FROM&gt;/&lt;N&gt;</code></li>
+<li><code>/output/&lt;OUTPOINT&gt;</code></li>
+<li><code>/output/&lt;OUTPOINT&gt;</code></li>
+<li><code>/sat/&lt;SAT&gt;</code></li>
+</ul>
+<p>To get a list of the latest 100 inscriptions you would do:</p>
+<pre><code>curl -s -H &quot;Accept: application/json&quot; 'http://0.0.0.0:80/inscriptions'
+</code></pre>
+<p>To see information about a UTXO, which includes inscriptions inside it, do:</p>
+<pre><code>curl -s -H &quot;Accept: application/json&quot; 'http://0.0.0.0:80/output/bc4c30829a9564c0d58e6287195622b53ced54a25711d1b86be7cd3a70ef61ed:0'
+</code></pre>
+<p>Which returns:</p>
+<pre><code>{
+  &quot;value&quot;: 10000,
+  &quot;script_pubkey&quot;: &quot;OP_PUSHNUM_1 OP_PUSHBYTES_32 156cc4878306157720607cdcb4b32afa4cc6853868458d7258b907112e5a434b&quot;,
+  &quot;address&quot;: &quot;bc1pz4kvfpurqc2hwgrq0nwtfve2lfxvdpfcdpzc6ujchyr3ztj6gd9sfr6ayf&quot;,
+  &quot;transaction&quot;: &quot;bc4c30829a9564c0d58e6287195622b53ced54a25711d1b86be7cd3a70ef61ed&quot;,
+  &quot;sat_ranges&quot;: null,
+  &quot;inscriptions&quot;: [
+    &quot;6fb976ab49dcec017f1e201e84395983204ae1a7c2abf7ced0a85d692e442799i0&quot;
+  ]
+}
+</code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="ordinal-inscription-guide"><a class="header" href="#ordinal-inscription-guide">Ordinal Inscription Guide</a></h1>
 <p>Individual sats can be inscribed with arbitrary content, creating
 Bitcoin-native digital artifacts that can be held in a Bitcoin wallet and
@@ -1193,13 +1228,17 @@ explorer</a>.</p>
 printed when you run:</p>
 <pre><code>ord wallet inscriptions
 </code></pre>
-<h2 id="parent-child-inscriptions"><a class="header" href="#parent-child-inscriptions">Parent Child Inscriptions</a></h2>
-<p>A child inscription is an inscription that is a child of another inscription. See <a href="guides/../inscriptions/provenance.html">provenance</a> for more information.</p>
-<p>get the parent inscription id <code>&lt;PARENT_INSCRIPTION_ID&gt;</code> from the output of <code>ord wallet inscriptions</code></p>
-<pre><code>ord wallet inscribe --fee-rate FEE_RATE --parent &lt;PARENT_INSCRIPTION_ID&gt; CHILD_FILE&quot;
+<h2 id="parent-child-inscriptions"><a class="header" href="#parent-child-inscriptions">Parent-Child Inscriptions</a></h2>
+<p>Parent-child inscriptions enable what is colloquially known as collections, see
+<a href="guides/../inscriptions/provenance.html">provenance</a> for more information.</p>
+<p>To make an inscription a child of another, the parent inscription has to be
+inscribed and present in the wallet. To choose a parent run <code>ord wallet inscriptions</code>
+and copy the inscription id (<code>&lt;PARENT_INSCRIPTION_ID&gt;</code>).</p>
+<p>Now inscribe the child inscription and specify the parent like so:</p>
+<pre><code>ord wallet inscribe --fee-rate FEE_RATE --parent &lt;PARENT_INSCRIPTION_ID&gt; CHILD_FILE
 </code></pre>
-<p>And when you visit <a href="https://ordinals.com/">the ordinals explorer</a> at
-<code>ordinals.com/inscription/INSCRIPTION_ID</code>.</p>
+<p>This relationship cannot be added retroactively, the parent has to be
+present at inception of the child.</p>
 <h2 id="sending-inscriptions"><a class="header" href="#sending-inscriptions">Sending Inscriptions</a></h2>
 <p>Ask the recipient to generate a new address by running:</p>
 <pre><code>ord wallet receive
@@ -1573,20 +1612,20 @@ can be run with the following network flags:</p>
 <pre><code>ord -r wallet receive
 </code></pre>
 <p>Mine 101 blocks (to unlock the coinbase) with:</p>
-<pre><code>bitcoin-cli generatetoaddress 101 &lt;receive address&gt;
+<pre><code>bitcoin-cli -regtest generatetoaddress 101 &lt;receive address&gt;
 </code></pre>
 <p>Inscribe in regtest with:</p>
 <pre><code>ord -r wallet inscribe --fee-rate 1 &lt;file&gt;
 </code></pre>
 <p>Mine the inscription with:</p>
-<pre><code>bitcoin-cli generatetoaddress 1 &lt;receive address&gt;
+<pre><code>bitcoin-cli -regtest generatetoaddress 1 &lt;receive address&gt;
 </code></pre>
 <p>View the inscription in the regtest explorer:</p>
 <pre><code>ord -r server
 </code></pre>
 <h2 id="testing-recursion"><a class="header" href="#testing-recursion">Testing Recursion</a></h2>
 <p>When testing out <a href="guides/../inscriptions/recursion.html">recursion</a>, inscribe the
-dependencies first (example with <a href="https://p5js.org">p5.js</a>:</p>
+dependencies first (example with <a href="https://p5js.org">p5.js</a>):</p>
 <pre><code>ord -r wallet inscribe --fee-rate 1 p5.js
 </code></pre>
 <p>This should return a <code>inscription_id</code> which you can then reference in your
