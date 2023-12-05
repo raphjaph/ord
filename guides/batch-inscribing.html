@@ -186,6 +186,9 @@
                           <li role="none"><button role="menuitem" class="theme">
                               <a id="hi">हिंदी</a>
                           </button></li>
+                          <li role="none"><button role="menuitem" class="theme">
+                              <a id="it">Italiano</a>
+                          </button></li>
                         </ul>
 
                         <script>
@@ -278,9 +281,10 @@ postage: 12345
 #
 # each inscription has the following fields:
 #
-# `inscription`: path to inscription contents
+# `file`: path to inscription contents
 # `metadata`: inscription metadata (optional)
 # `metaprotocol`: inscription metaprotocol (optional)
+# `destination`: destination for that inscription (optional). Note: If no destination is specified a new wallet change address will be used
 inscriptions:
   - file: mango.avif
     metadata:
