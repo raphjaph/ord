@@ -1307,8 +1307,6 @@ explorer on mainnet at <a href="https://ordinals.com">ordinals.com</a>, and on s
 <p>To enable the JSON-API endpoints add the <code>--enable-json-api</code> or <code>-j</code> flag (see
 <a href="guides/explorer.html#json-api">here</a> for more info):</p>
 <p><code>ord server --enable-json-api</code></p>
-<p>To test how your inscriptions will look you can run:</p>
-<p><code>ord preview &lt;FILE1&gt; &lt;FILE2&gt; ...</code></p>
 <h2 id="search"><a class="header" href="#search">Search</a></h2>
 <p>The search box accepts a variety of object representations.</p>
 <h3 id="blocks"><a class="header" href="#blocks">Blocks</a></h3>
@@ -1593,32 +1591,31 @@ postage: 12345
 # sat: 5000000000
 
 # inscriptions to inscribe
-#
-# each inscription has the following fields:
-#
-# `file`: path to inscription contents
-# `metadata`: inscription metadata (optional)
-# `metaprotocol`: inscription metaprotocol (optional)
-# `destination`: destination for that inscription (optional). Note: If no destination is specified a new wallet change address will be used
 inscriptions:
-  - file: mango.avif
-    metadata:
-      title: Delicious Mangos
-      description: &gt;
-        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam semper,
-        ligula ornare laoreet tincidunt, odio nisi euismod tortor, vel blandit
-        metus est et odio. Nullam venenatis, urna et molestie vestibulum, orci
-        mi efficitur risus, eu malesuada diam lorem sed velit. Nam fermentum
-        dolor et luctus euismod.
-    destination: bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4
+  # path to inscription content
+- file: mango.avif
+  # inscription to delegate content to (optional)
+  delegate: 6ac5cacb768794f4fd7a78bf00f2074891fce68bd65c4ff36e77177237aacacai0
+  # destination (optional, if no destination is specified a new wallet change address will be used)
+  destination: bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4
+  # inscription metadata (optional)
+  metadata:
+    title: Delicious Mangos
+    description: &gt;
+      Lorem ipsum dolor sit amet, consectetur adipiscing elit. Aliquam semper,
+      ligula ornare laoreet tincidunt, odio nisi euismod tortor, vel blandit
+      metus est et odio. Nullam venenatis, urna et molestie vestibulum, orci
+      mi efficitur risus, eu malesuada diam lorem sed velit. Nam fermentum
+      dolor et luctus euismod.
+    # inscription metaprotocol (optional)
+    metaprotocol: DOPEPROTOCOL-42069
 
-  - file: token.json
-    metaprotocol: brc-20
+- file: token.json
 
-  - file: tulip.png
-    metadata:
-      author: Satoshi Nakamoto
-    destination: bc1pdqrcrxa8vx6gy75mfdfj84puhxffh4fq46h3gkp6jxdd0vjcsdyspfxcv6
+- file: tulip.png
+  destination: bc1pdqrcrxa8vx6gy75mfdfj84puhxffh4fq46h3gkp6jxdd0vjcsdyspfxcv6
+  metadata:
+    author: Satoshi Nakamoto
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="sat-hunting"><a class="header" href="#sat-hunting">Sat Hunting</a></h1>
 <p><em>This guide is out of date. Since it was written, the <code>ord</code> binary was changed
