@@ -1099,12 +1099,64 @@ OP_ENDIF
 <p>To create a wallet named <code>ord</code>, the default, for use with <code>ord wallet</code>, run:</p>
 <pre><code>ord wallet create
 </code></pre>
+<p>This will print out your seed phrase mnemonic, store it somewhere safe.</p>
+<pre><code>{
+  "mnemonic": "dignity buddy actor toast talk crisp city annual tourist orient similar federal",
+  "passphrase": ""
+}
+</code></pre>
 <p>If you want to specify a different name or use an <code>ord server</code> running on a non-default URL you can set these options:</p>
 <pre><code>ord wallet --name foo --server-url http://127.0.0.1:8080 create
 </code></pre>
 <p>To see all available wallet options you can run:</p>
 <pre><code>ord wallet help
 </code></pre>
+<h2 id="restoring-and-dumping-wallet"><a class="header" href="#restoring-and-dumping-wallet">Restoring and Dumping Wallet</a></h2>
+<p>The <code>ord</code> wallet uses descriptors, so you can export the output descriptors and import them into another descriptor-based wallet. To export the wallet descriptors, which include your private keys:</p>
+<pre><code>$ ord wallet dump
+==========================================
+= THIS STRING CONTAINS YOUR PRIVATE KEYS =
+=        DO NOT SHARE WITH ANYONE        =
+==========================================
+{
+  "wallet_name": "ord",
+  "descriptors": [
+    {
+      "desc": "tr([551ac972/86'/1'/0']tprv8h4xBhrfZwX9o1XtUMmz92yNiGRYjF9B1vkvQ858aN1UQcACZNqN9nFzj3vrYPa4jdPMfw4ooMuNBfR4gcYm7LmhKZNTaF4etbN29Tj7UcH/0/*)#uxn94yt5",
+      "timestamp": 1296688602,
+      "active": true,
+      "internal": false,
+      "range": [
+        0,
+        999
+      ],
+      "next": 0
+    },
+    {
+      "desc": "tr([551ac972/86'/1'/0']tprv8h4xBhrfZwX9o1XtUMmz92yNiGRYjF9B1vkvQ858aN1UQcACZNqN9nFzj3vrYPa4jdPMfw4ooMuNBfR4gcYm7LmhKZNTaF4etbN29Tj7UcH/1/*)#djkyg3mv",
+      "timestamp": 1296688602,
+      "active": true,
+      "internal": true,
+      "range": [
+        0,
+        999
+      ],
+      "next": 0
+    }
+  ]
+}
+</code></pre>
+<p>An <code>ord</code> wallet can be restored from a mnemonic:</p>
+<pre><code>ord wallet restore --from mnemonic
+</code></pre>
+<p>Type your mnemonic and press return.</p>
+<p>To restore from a descriptor in <code>descriptor.json</code>:</p>
+<pre><code>cat descriptor.json | ord wallet restore --from descriptor
+</code></pre>
+<p>To restore from a descriptor in the clipboard:</p>
+<pre><code>ord wallet restore --from descriptor
+</code></pre>
+<p>Paste the descriptor into the terminal and press CTRL-D on unix and CTRL-Z on Windows.</p>
 <h2 id="tumanggap-ng-sats"><a class="header" href="#tumanggap-ng-sats">Tumanggap ng sats</a></h2>
 <p>Ang mga inscription ay ginagawa sa mga indibidwal na sats, gamit ang mga normal na transaksyon sa Bitcoin na nagbabayad ng gamit ang sats, kaya ang iyong wallet ay mangangailangan ng mga sats.</p>
 <p>Kumuha ng bagong address mula sa iyong ord wallet sa pamamagitan ng:</p>
@@ -1540,10 +1592,44 @@ ord index update
 <div style="break-before: page; page-break-before: always;"></div><h1 id="settings"><a class="header" href="#settings">Settings</a></h1>
 <p><code>ord</code> can be configured with the command line, environment variables, a configuration file, and default values.</p>
 <p>The command line takes precedence over environment variables, which take precedence over the configuration file, which takes precedence over defaults.</p>
-<p>The path to the configuration file can be given with <code>--config &lt;CONFIG_PATH&gt;</code>. <code>ord</code> will error if <code>&lt;CONFIG_PATH&gt;</code> doesn't exist. The path to a configuration directory can be given with <code>--config-dir &lt;CONFIG_DIR_PATH&gt;</code>, in which case the config path is <code>&lt;CONFIG_DIR_PATH&gt;/ord.yaml</code>. It is not an error if <code>&lt;CONFIG_DIR_PATH&gt;/ord.yaml</code> does not exist.</p>
+<p>The path to the configuration file can be given with <code>--config &lt;CONFIG_PATH&gt;</code>. <code>ord</code> will error if <code>&lt;CONFIG_PATH&gt;</code> doesn't exist.</p>
+<p>The path to a directory containing a configuration file name named <code>ord.yaml</code> can be given with <code>--config-dir &lt;CONFIG_DIR_PATH&gt;</code> or <code>--data-dir &lt;DATA_DIR_PATH&gt;</code> in which case the config path is <code>&lt;CONFIG_DIR_PATH&gt;/ord.yaml</code> or <code>&lt;DATA_DIR_PATH&gt;/ord.yaml</code>. It is not an error if it does not exist.</p>
+<p>If none of <code>--config</code>, <code>--config-dir</code>, or <code>--data-dir</code> are given, and a file named <code>ord.yaml</code> exists in the default data directory, it will be loaded.</p>
 <p>For a setting named <code>--setting-name</code> on the command line, the environment variable will be named <code>ORD_SETTING_NAME</code>, and the config file field will be named <code>setting_name</code>. For example, the data directory can be configured with <code>--data-dir</code> on the command line, the <code>ORD_DATA_DIR</code> environment variable, or <code>data_dir</code> in the config file.</p>
 <p>See <code>ord --help</code> for documentation of all the settings.</p>
 <p><code>ord</code>'s current configuration can be viewed as JSON with the <code>ord settings</code> command.</p>
+<h2 id="example-configuration"><a class="header" href="#example-configuration">Example Configuration</a></h2>
+<pre><code class="language-yaml"># example config
+
+# see `ord --help` for setting documentation
+
+bitcoin_data_dir: /var/lib/bitcoin
+bitcoin_rpc_password: bar
+bitcoin_rpc_url: https://localhost:8000
+bitcoin_rpc_username: foo
+chain: mainnet
+commit_interval: 10000
+config: /var/lib/ord/ord.yaml
+config_dir: /var/lib/ord
+cookie_file: /var/lib/bitcoin/.cookie
+data_dir: /var/lib/ord
+first_inscription_height: 100
+height_limit: 1000
+hidden:
+- 6fb976ab49dcec017f1e201e84395983204ae1a7c2abf7ced0a85d692e442799i0
+- 703e5f7c49d82aab99e605af306b9a30e991e57d42f982908a962a81ac439832i0
+index: /var/lib/ord/index.redb
+index_cache_size: 1000000000
+index_runes: true
+index_sats: true
+index_spent_sats: true
+index_transactions: true
+integration_test: true
+no_index_inscriptions: true
+server_password: bar
+server_url: http://localhost:8888
+server_username: foo
+</code></pre>
 <h2 id="hiding-inscription-content"><a class="header" href="#hiding-inscription-content">Hiding Inscription Content</a></h2>
 <p>Inscription content can be selectively prevented from being served by <code>ord server</code>.</p>
 <p>Unlike other settings, this can only be configured with the configuration file or environment variables.</p>
@@ -1577,7 +1663,7 @@ ord index update
 <h2 id="test-environment"><a class="header" href="#test-environment">Test Environment</a></h2>
 <p><code>ord env &lt;DIRECTORY&gt;</code> creates a test environment in <code>&lt;DIRECTORY&gt;</code>, spins up <code>bitcoind</code> and <code>ord server</code> instances, prints example commands for interacting with the test <code>bitcoind</code> and <code>ord server</code> instances, waits for <code>CTRL-C</code>, and then shuts down <code>bitcoind</code> and <code>ord server</code>.</p>
 <p><code>ord env</code> tries to use port 9000 for <code>bitcoind</code>'s RPC interface, and port <code>9001</code> for <code>ord</code>'s RPC interface, but will fall back to random unused ports.</p>
-<p>Inside of the env directory, <code>ord env</code> will write <code>bitcoind</code>'s configuration to <code>bitcoin.conf</code>, and the env configuration to <code>env.json</code>.</p>
+<p>Inside of the env directory, <code>ord env</code> will write <code>bitcoind</code>'s configuration to <code>bitcoin.conf</code>, <code>ord</code>'s configuration to <code>ord.yaml</code>, and the env configuration to <code>env.json</code>.</p>
 <p><code>env.json</code> contains the commands needed to invoke <code>bitcoin-cli</code> and <code>ord wallet</code>, as well as the ports <code>bitcoind</code> and <code>ord server</code> are listening on.</p>
 <p>These can be extracted into shell commands using <code>jq</code>:</p>
 <pre><code class="language-shell">bitcoin=`jq -r '.bitcoin_cli_command | join(" ")' env/env.json`
@@ -1585,6 +1671,12 @@ $bitcoin listunspent
 
 ord=`jq -r '.ord_wallet_command | join(" ")' env/env.json`
 $ord outputs
+</code></pre>
+<p>If <code>ord</code> is in the <code>$PATH</code> and the env directory is <code>env</code>, the <code>bitcoin-cli</code> command will be:</p>
+<pre><code>bitcoin-cli -datadir=env`
+</code></pre>
+<p>And the <code>ord</code> will be:</p>
+<pre><code>ord --data-dir env
 </code></pre>
 <h2 id="test-networks"><a class="header" href="#test-networks">Test Networks</a></h2>
 <p>Maaaring subukan ang Ord gamit ang mga sumusunod na flag upang tukuyin ang test network. Para sa higit pang impormasyon sa pagpapatakbo ng Bitcoin Core para sa testing, tingnan ang <a href="https://developer.bitcoin.org/examples/testing.html">Bitcoin's developer documentation</a>.</p>
