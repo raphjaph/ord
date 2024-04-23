@@ -1773,8 +1773,8 @@ inscriptions:
 <p>Kasalukuyang may <a href="https://github.com/ordinals/ord/issues/1589">bug</a> na nagiging sanhi ng isang na-import na wallet upang hindi awtomatikong muling i-scan versus sa blockchain. Upang magawa ito, kailangan mong manu-manong mag-trigger ang rescan gamit ang bitcoin core cli: <code>bitcoin-cli -rpcwallet=ord rescanblockchain 767430</code></p>
 <p>Pagkatapos ay maaari mong suriin ang mga inskripsiyon ng iyong wallet gamit ang <code>ord wallet inscriptions</code></p>
 <p>Tandaan na kung nakagawa ka dati ng wallet na may <code>ord</code>, pagkatapos ay mayroon nang wallet na may default na pangalan, at kakailanganing ibigay ang iyong imported na wallet ng bagong pangalan. Maaari mong gamitin ang parameter na <code>--wallet</code> sa lahat ng commands ng <code>ord</code> para ma-reference sa ibang wallet, hal:</p>
-<p><code>ord --wallet ord_from_sparrow wallet restore "BIP39 SEED PHRASE"</code></p>
-<p><code>ord --wallet ord_from_sparrow wallet inscriptions</code></p>
+<p><code>ord wallet --name ord_from_sparrow wallet restore --from mnemonic</code></p>
+<p><code>ord wallet --name ord_from_sparrow wallet inscriptions</code></p>
 <p><code>bitcoin-cli -rpcwallet=ord_from_sparrow rescanblockchain 767430</code></p>
 <h2 id="pagpapadala-ng-mga-inskripsiyon-gamit-ang-sparrow-wallet"><a class="header" href="#pagpapadala-ng-mga-inskripsiyon-gamit-ang-sparrow-wallet">Pagpapadala ng mga inskripsiyon gamit ang Sparrow Wallet</a></h2>
 <h4 id="-warning--1"><a class="header" href="#-warning--1">⚠️⚠️ Warning ⚠️⚠️</a></h4>
@@ -2041,7 +2041,7 @@ ord index update
 <h4 id="sparrow-wallet"><a class="header" href="#sparrow-wallet">Sparrow Wallet</a></h4>
 <p>Mag-navigate sa tab na <code>Setting</code>, pagkatapos ay sa <code>Script Policy</code>, at pindutin ang i-edit button to display the descriptor.</p>
 <h3 id="pag-transfer-ng-ordinals"><a class="header" href="#pag-transfer-ng-ordinals">Pag-transfer ng Ordinals</a></h3>
-<p>Sinusuportahan ng <code>ord</code> wallet ang pag-transfer ng mga partikular na satoshi. Maaari mo ring gamitin ang <code>bitcoin-cli</code> commands <code>createrawtransaction</code>,<code>signrawtransactionwithwallet</code>, at <code>sendrawtransaction</code>, kung paano gawin ito ay kumplikado at sa labas ng saklaw ng gabay na ito.</p>
+<p>The <code>ord</code> wallet supports transferring specific satoshis by using the  name of the sastoshi with the <code>ord wallet send</code> command. You can also use the <code>bitcoin-cli</code> commands <code>createrawtransaction</code>, <code>signrawtransactionwithwallet</code>,  and <code>sendrawtransaction</code>, but this method can be complex and is outside the  scope of this guide.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="settings"><a class="header" href="#settings">Settings</a></h1>
 <p><code>ord</code> can be configured with the command line, environment variables, a configuration file, and default values.</p>
 <p>The command line takes precedence over environment variables, which take precedence over the configuration file, which takes precedence over defaults.</p>

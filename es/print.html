@@ -1773,8 +1773,8 @@ inscriptions:
 <p>Actualmente hay un <a href="https://github.com/ordinals/ord/issues/1589">bug</a> que impide que un monedero importado no se escanee automáticamente para encontrar su contenido en la blockchain. Para solucionar esto tendrás que ejecutar manualmente un escaneo usando el cli de bitcoin core: <code>bitcoin-cli -rpcwallet=ord rescanblockchain 767430</code></p>
 <p>Luego puedes revisar las inscripciones de tu monedero usando <code>ord wallet inscriptions</code></p>
 <p>Ten en cuenta que si has creado previamente una cartera con <code>ord</code>, ya tendrás una cartera con el nombre predeterminado y tendrás que darle un nombre diferente a tu cartera importada. Puedes usar el parámetro <code>--wallet</code> en todos los comandos de <code>ord</code> para hacer referencia a un monedero diferente, por ejemplo:</p>
-<p><code>ord --wallet ord_from_sparrow wallet restore "BIP39 SEED PHRASE"</code></p>
-<p><code>ord --wallet ord_from_sparrow wallet inscriptions</code></p>
+<p><code>ord wallet --name ord_from_sparrow wallet restore --from mnemonic</code></p>
+<p><code>ord wallet --name ord_from_sparrow wallet inscriptions</code></p>
 <p><code>bitcoin-cli -rpcwallet=ord_from_sparrow rescanblockchain 767430</code></p>
 <h2 id="enviar-inscripciones-con-el-monedero-sparrow"><a class="header" href="#enviar-inscripciones-con-el-monedero-sparrow">Enviar inscripciones con el Monedero Sparrow</a></h2>
 <h4 id="-advertencia--1"><a class="header" href="#-advertencia--1">⚠️⚠️ Advertencia ⚠️⚠️</a></h4>
@@ -2043,7 +2043,7 @@ ord index update
 <h4 id="monedero-sparrow"><a class="header" href="#monedero-sparrow">Monedero Sparrow</a></h4>
 <p>Haz clic en la pestaña <code>Settings</code>, luego en <code>Script Policy</code>, y presiona el botón de editar para mostrar el descriptor.</p>
 <h3 id="transferir-ordinals"><a class="header" href="#transferir-ordinals">Transferir Ordinals</a></h3>
-<p>El monedero <code>ord</code> permite la transferencia de satoshis específicos. También puedes usar los comandos <code>bitcoin-cli</code> tales como <code>createrawtransaction</code>, <code>signrawtransactionwithwallet</code> y <code>sendrawtransaction</code>, pero hacerlo es complejo y está fuera del alcance de esta guía.</p>
+<p>The <code>ord</code> wallet supports transferring specific satoshis by using the  name of the sastoshi with the <code>ord wallet send</code> command. You can also use the <code>bitcoin-cli</code> commands <code>createrawtransaction</code>, <code>signrawtransactionwithwallet</code>,  and <code>sendrawtransaction</code>, but this method can be complex and is outside the  scope of this guide.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="settings"><a class="header" href="#settings">Settings</a></h1>
 <p><code>ord</code> can be configured with the command line, environment variables, a configuration file, and default values.</p>
 <p>The command line takes precedence over environment variables, which take precedence over the configuration file, which takes precedence over defaults.</p>

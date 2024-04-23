@@ -2449,8 +2449,8 @@ ordinals.</p>
 <code>bitcoin-cli -rpcwallet=ord rescanblockchain 767430</code></p>
 <p>You can then check your wallet's inscriptions using <code>ord wallet inscriptions</code></p>
 <p>Note that if you have previously created a wallet with <code>ord</code>, then you will already have a wallet with the default name, and will need to give your imported wallet a different name. You can use the <code>--wallet</code> parameter in all <code>ord</code> commands to reference a different wallet, eg:</p>
-<p><code>ord --wallet ord_from_sparrow wallet restore "BIP39 SEED PHRASE"</code></p>
-<p><code>ord --wallet ord_from_sparrow wallet inscriptions</code></p>
+<p><code>ord wallet --name ord_from_sparrow wallet restore --from mnemonic</code></p>
+<p><code>ord wallet --name ord_from_sparrow wallet inscriptions</code></p>
 <p><code>bitcoin-cli -rpcwallet=ord_from_sparrow rescanblockchain 767430</code></p>
 <h2 id="sending-inscriptions-with-sparrow-wallet"><a class="header" href="#sending-inscriptions-with-sparrow-wallet">Sending inscriptions with Sparrow Wallet</a></h2>
 <h4 id="-warning--1"><a class="header" href="#-warning--1">⚠️⚠️ Warning ⚠️⚠️</a></h4>
@@ -2762,10 +2762,11 @@ search for your wallet's UTXOs.</p>
 <p>Navigate to the <code>Settings</code> tab, then to <code>Script Policy</code>, and press the edit
 button to display the descriptor.</p>
 <h3 id="transferring-ordinals"><a class="header" href="#transferring-ordinals">Transferring Ordinals</a></h3>
-<p>The <code>ord</code> wallet supports transferring specific satoshis. You can also use
+<p>The <code>ord</code> wallet supports transferring specific satoshis by using the
+name of the sastoshi with the <code>ord wallet send</code> command. You can also use the
 <code>bitcoin-cli</code> commands <code>createrawtransaction</code>, <code>signrawtransactionwithwallet</code>,
-and <code>sendrawtransaction</code>, how to do so is complex and outside the scope of this
-guide.</p>
+and <code>sendrawtransaction</code>, but this method can be complex and is outside the
+scope of this guide.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="settings"><a class="header" href="#settings">Settings</a></h1>
 <p><code>ord</code> can be configured with the command line, environment variables, a
 configuration file, and default values.</p>
