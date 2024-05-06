@@ -860,13 +860,14 @@ OP_ENDIF
 <p>A transaction may have at most one runestone.</p>
 <p>A runestone may etch a new rune, mint an existing rune, and transfer runes from a transaction's inputs to its outputs.</p>
 <p>A transaction output may hold balances of any number of runes.</p>
-<p>Runes are identified by IDs, which consist of the block in which a rune was etched and the index of the etching transaction within that block, represented in text as <code>BLOCK:TX</code>. For example, the ID of the rune minted in the 20th transaction of the 500th block is <code>500:20</code>.</p>
+<p>Runes are identified by IDs, which consist of the block in which a rune was etched and the index of the etching transaction within that block, represented in text as <code>BLOCK:TX</code>. For example, the ID of the rune etched in the 20th transaction of the 500th block is <code>500:20</code>.</p>
 <h2 id="etching"><a class="header" href="#etching">Etching</a></h2>
 <p>Runes come into existence by being etched. Etching creates a rune and sets its properties. Once set, these properties are immutable, even to its etcher.</p>
 <h3 id="name"><a class="header" href="#name">Name</a></h3>
-<p>Names consist of the letters A through Z and are between one and twenty-eight characters long. For example <code>UNCOMMONGOODS</code> is a rune name.</p>
+<p>Names consist of the letters A through Z and are between one and twenty-six letters long. For example <code>UNCOMMONGOODS</code> is a rune name.</p>
 <p>Names may contain spacers, represented as bullets, to aid readability. <code>UNCOMMONGOODS</code> might be etched as <code>UNCOMMON•GOODS</code>.</p>
 <p>The uniqueness of a name does not depend on spacers. Thus, a rune may not be etched with the same sequence of letters as an existing rune, even if it has different spacers.</p>
+<p>Spacers can only be placed between two letters. Finally, spacers do not count towards the letter count.</p>
 <h3 id="divisibility"><a class="header" href="#divisibility">Divisibility</a></h3>
 <p>A rune's divisibility is how finely it may be divided into its atomic units. Divisibility is expressed as the number of digits permissible after the decimal point in an amount of runes. A rune with divisibility 0 may not be divided. A unit of a rune with divisibility 1 may be divided into ten sub-units, a rune with divisibility 2 may be divided into a hundred, and so on.</p>
 <h3 id="symbol"><a class="header" href="#symbol">Symbol</a></h3>
@@ -1877,7 +1878,6 @@ ord index update
 </code></pre>
 <p>もちろん自分でデータの目録の位置を設置することができます,<code>ord --datadir &lt;DIR&gt; index update</code> または指定された特定のファイル名とパスに‘ord --index <FILENAME>で索引運行します’。</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="聡狩り"><a class="header" href="#聡狩り">聡狩り</a></h1>
-<p><em>このガイドは時代遅れです。書かれて以来、'ord'インストールファイルが変更されました。「--index-sats」フラグが指定されている場合にのみ、完全なスマートインデックスが作成されます。さらに「ord」には現在、ビットコインのコアウォレットを含むウォレットが内蔵されていて、ord wallet --help`を参照してください。</em></p>
 <p>Ordinal hunting is difficult but rewarding. The feeling of owning a wallet full of UTXOs, redolent with the scent of rare and exotic sats, is beyond compare.</p>
 <p>Ordinals are numbers for satoshis. Every satoshi has an ordinal number and every ordinal number has a satoshi.</p>
 <h2 id="preparation"><a class="header" href="#preparation">Preparation</a></h2>
@@ -1901,10 +1901,10 @@ ord index update
 <p>Get a copy of <code>ord</code> from <a href="https://github.com/ordinals/ord/">the repo</a>.</p>
 </li>
 <li>
-<p>Run <code>RUST_LOG=info ord index</code>. It should connect to your bitcoin core node and start indexing.</p>
+<p>Run <code>ord --index-sats server</code>. It should connect to your bitcoin core node and start indexing.</p>
 </li>
 <li>
-<p>Wait for it to finish indexing.</p>
+<p>Once it has finished indexing, leave the server running and submit new <code>ord</code> commands in a separate terminal session.</p>
 </li>
 </ul>
 </li>
@@ -2047,7 +2047,7 @@ ord index update
 <h4 id="雀のウォレット"><a class="header" href="#雀のウォレット">雀のウォレット</a></h4>
 <p>Navigate to the <code>Settings</code> tab, then to <code>Script Policy</code>, and press the edit button to display the descriptor.</p>
 <h3 id="transferring-ordinals"><a class="header" href="#transferring-ordinals">Transferring Ordinals</a></h3>
-<p>The <code>ord</code> wallet supports transferring specific satoshis by using the name of the satoshi. To send a the satoshi <code>zonefruits</code> do:</p>
+<p>The <code>ord</code> wallet supports transferring specific satoshis by using the name of the satoshi. To send the satoshi <code>zonefruits</code>, do:</p>
 <pre><code>ord wallet send &lt;RECEIVING_ADDRESS&gt; zonefruits --fee-rate 21
 </code></pre>
 <p>You can also use the <code>bitcoin-cli</code> commands <code>createrawtransaction</code>, <code>signrawtransactionwithwallet</code>, and <code>sendrawtransaction</code>, but this method can be complex and is outside the scope of this guide.</p>
