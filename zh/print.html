@@ -709,6 +709,8 @@ OP_ENDIF
 <li><code>/r/children/&lt;INSCRIPTION_ID&gt;/&lt;PAGE&gt;</code>: 100个子铭文ID的合集 on <code>&lt;PAGE&gt;</code>.</li>
 <li><code>/r/inscription/&lt;INSCRIPTION_ID&gt;</code>: information about an inscription</li>
 <li><code>/r/metadata/&lt;INSCRIPTION_ID&gt;</code>: 包含十六进制编码的 CBOR 元数据 的 JSON 字符串</li>
+<li><code>/r/parents/&lt;INSCRIPTION_ID&gt;</code>: the first 100 parent inscription ids.</li>
+<li><code>/r/parents/&lt;INSCRIPTION_ID&gt;/&lt;PAGE&gt;</code>: the set of 100 parent inscription ids on <code>&lt;PAGE&gt;</code>.</li>
 <li><code>/r/sat/&lt;SAT_NUMBER&gt;</code>: 在一个Sats上的头100个铭文ID.</li>
 <li><code>/r/sat/&lt;SAT_NUMBER&gt;/&lt;PAGE&gt;</code>: 在 <code>&lt;PAGE&gt;</code>上的100个铭文ID合集.</li>
 <li><code>/r/sat/&lt;SAT_NUMBER&gt;/at/&lt;INDEX&gt;</code>: 所有<code>&lt;INDEX&gt;</code> 处在一个聪上的铭文ID <code>&lt;INDEX&gt;</code>可能是从索引往后的负数比如<code>0</code> 是第一个而 <code>-1</code> 是最近的.</li>
@@ -2081,6 +2083,7 @@ hidden:
 - 6fb976ab49dcec017f1e201e84395983204ae1a7c2abf7ced0a85d692e442799i0
 - 703e5f7c49d82aab99e605af306b9a30e991e57d42f982908a962a81ac439832i0
 index: /var/lib/ord/index.redb
+index_addresses: true
 index_cache_size: 1000000000
 index_runes: true
 index_sats: true
