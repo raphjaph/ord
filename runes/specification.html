@@ -458,7 +458,7 @@ that it contains the fields and edicts, which may include an etching and mint.</
 <p>Note that tags are grouped by parity, i.e., whether they are even or odd.
 Unrecognized odd tags are ignored. Unrecognized even tags produce a cenotaph.</p>
 <p>All unused tags are reserved for use by the protocol, may be assigned at any
-time, and must not be used.</p>
+time, and should not be used.</p>
 <h5 id="body"><a class="header" href="#body">Body</a></h5>
 <p>The <code>Body</code> tag marks the end of the runestone's fields, causing all following
 integers to be interpreted as edicts.</p>
@@ -506,7 +506,8 @@ transaction.</p>
 <h5 id="pointer"><a class="header" href="#pointer">Pointer</a></h5>
 <p>The <code>Pointer</code> field contains the index of the output to which runes unallocated
 by edicts should be transferred. If the <code>Pointer</code> field is absent, unallocated
-runes are transferred to the first non-<code>OP_RETURN</code> output.</p>
+runes are transferred to the first non-<code>OP_RETURN</code> output. If the pointer is greater than the
+number of outputs, the runestone is a cenotaph.</p>
 <h5 id="cenotaph"><a class="header" href="#cenotaph">Cenotaph</a></h5>
 <p>The <code>Cenotaph</code> field is unrecognized.</p>
 <h5 id="divisibility"><a class="header" href="#divisibility">Divisibility</a></h5>
