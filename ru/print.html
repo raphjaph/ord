@@ -7209,7 +7209,7 @@ inscriptions:
 <p><img src="guides/collecting/images/wallet_setup_02.png" alt="" /></p>
 <p>Выберите <code>Use 12 Words</code> и нажмите <code>Generate New</code>. Оставьте блан пароля пустой.</p>
 <p><img src="guides/collecting/images/wallet_setup_03.png" alt="" /></p>
-<p>Для вас будет сгенерирована новая начальная фраза BIP39 из 12 слов. Запишите ее в надежном месте, так как это ваш запасной вариант для получения доступа к кошельку. НИКОГДА не сообщайте и не показывайте эту seed-фразу никому другому.</p>
+<p>A new 12 word <a href="https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki">BIP39</a> seed phrase will be generated for you. Write this down somewhere safe as this is your backup to get access to your wallet. NEVER share or show this seed phrase to anyone else.</p>
 <p>После того как вы записали seed-фразу, нажмите кнопку <code>Confirm Backup</code>.</p>
 <p><img src="guides/collecting/images/wallet_setup_04.png" alt="" /></p>
 <p>Вновь введите записанную вами seed-фразу и нажмите кнопку <code>Create Keystore</code>.</p>
@@ -7218,7 +7218,7 @@ inscriptions:
 <p><img src="guides/collecting/images/wallet_setup_06.png" alt="" /></p>
 <p>Нажмите кнопку <code>Apply</code>. При необходимости добавьте пароль для кошелька.</p>
 <p><img src="guides/collecting/images/wallet_setup_07.png" alt="" /></p>
-<p>Теперь у вас есть кошелек, который совместим с <code>ord</code> и может быть импортирован в <code>ord</code> с помощью seed-фразы BIP39. Чтобы получить ordinals или надписи, перейдите на вкладку <code>Receive</code> и скопируйте новый адрес.</p>
+<p>You now have a wallet which is compatible with <code>ord</code>, and can be imported into <code>ord</code> using the <a href="https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki">BIP39</a> Seed Phrase. To receive ordinals or inscriptions, click on the <code>Receive</code> tab and copy a new address.</p>
 <p>Каждый раз для получения необходимо использовать совершенно новый адрес, а не повторно использовать существующие.</p>
 <p>Обратите внимание, что биткоин отличается от некоторых других блокчейн кошельков тем, что этот кошелек может генерировать неограниченное количество новых адресов. Сгенерировать новый адрес можно, нажав на кнопку <code>Get Next Address</code>. Все адреса можно посмотреть на вкладке <code>Addresses</code> приложения.</p>
 <p>К каждому адресу можно добавить лейбл, чтобы отслеживать, для чего он был использован.</p>
@@ -7340,7 +7340,7 @@ inscriptions:
 <p>Затем передайте этот файл в <code>--config</code> при запуске сервера:</p>
 <p><code>ord --config ord.yaml server</code></p>
 <p>Обратите внимание, что опция <code>--config</code> идет после <code>ord</code>, но перед подкомандой <code>server</code>.</p>
-<p>Для загрузки изменений в конфиг файл необходимо перезапустить <code>ord</code>.</p>
+<p><code>ord</code> must be restarted in order to load changes to the config file.</p>
 <h2 id="ordinalscom"><a class="header" href="#ordinalscom"><code>ordinals.com</code></a></h2>
 <p>Экземпляры <code>ordinals.com</code> используют <code>systemd</code> для запуска службы <code>ord server</code>, которая называется <code>ord</code>, с файлом конфига, расположенным по адресу <code>/var/lib/ord/ord.yaml</code>.</p>
 <p>Чтобы скрыть надпись на <code>ordinals.com</code>:</p>
@@ -7723,7 +7723,7 @@ $ord outputs
 <pre><code>bitcoin-cli generatetoaddress 6 &lt;receive address&gt;
 </code></pre>
 <h3 id="mainnet-dependencies"><a class="header" href="#mainnet-dependencies">Mainnet Dependencies</a></h3>
-<p>To avoid having to change dependency inscription IDs to mainnet inscription IDs, you may utilize a content proxy when testing. <code>ord server</code> accepts a <code>--proxy</code> option, which takes the URL of a another <code>ord server</code> instance. When making a request to <code>/content/&lt;INSCRIPTION_ID&gt;</code> when a content proxy is set and the inscription is not found, <code>ord server</code> will forward the request to the content proxy. This allows you to run a test <code>ord server</code> instance with a mainnet content proxy. You can then use mainnet inscription IDs in your test inscription, which will then return the content of the mainnet inscriptions.</p>
+<p>To avoid having to change dependency inscription IDs to mainnet inscription IDs, you may utilize a content proxy when testing. <code>ord server</code> accepts a <code>--proxy</code> option, which takes the URL of another <code>ord server</code> instance. When making a request to <code>/content/&lt;INSCRIPTION_ID&gt;</code> when a content proxy is set and the inscription is not found, <code>ord server</code> will forward the request to the content proxy. This allows you to run a test <code>ord server</code> instance with a mainnet content proxy. You can then use mainnet inscription IDs in your test inscription, which will then return the content of the mainnet inscriptions.</p>
 <pre><code>ord --regtest server --proxy https://ordinals.com
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="wallet"><a class="header" href="#wallet">Wallet</a></h1>

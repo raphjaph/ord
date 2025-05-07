@@ -7209,7 +7209,7 @@ inscriptions:
 <p><img src="guides/collecting/images/wallet_setup_02.png" alt="" /></p>
 <p>『Use 12 Words』を選択し、『Generate New』をクリックします。パスフレーズは空白のままにします。。</p>
 <p><img src="guides/collecting/images/wallet_setup_03.png" alt="" /></p>
-<p>あなたのために新しい12語BIP 39シードフレーズが生成されます。このフレーズを安全な場所に書いてください。これはウォレットへのアクセス権を取得するためのバックアップです。このシードフレーズを他の人と共有したり表示したりしないでください</p>
+<p>A new 12 word <a href="https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki">BIP39</a> seed phrase will be generated for you. Write this down somewhere safe as this is your backup to get access to your wallet. NEVER share or show this seed phrase to anyone else.</p>
 <p>シードフレーズを書いたら、<code>Confirm Backup</code>をクリックしてください' <code>Confirm Backup</code>.</p>
 <p><img src="guides/collecting/images/wallet_setup_04.png" alt="" /></p>
 <p>メモしたシードフレーズを再入力して、'Create Key storeをクリックしてください。`.</p>
@@ -7218,7 +7218,7 @@ inscriptions:
 <p><img src="guides/collecting/images/wallet_setup_06.png" alt="" /></p>
 <p>『Apply』をクリックします。もしあなたが望むなら、財布にパスワードを追加してもいいです。。</p>
 <p><img src="guides/collecting/images/wallet_setup_07.png" alt="" /></p>
-<p>今、BIP 39シードフレーズを使って'ord'にインポートできる'ord'互換のウォレットを持っています。序数や銘文を受け取るには、'Receive'タブをクリックし、新しいアドレスをコピーします</p>
+<p>You now have a wallet which is compatible with <code>ord</code>, and can be imported into <code>ord</code> using the <a href="https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki">BIP39</a> Seed Phrase. To receive ordinals or inscriptions, click on the <code>Receive</code> tab and copy a new address.</p>
 <p>受信するたびに、既存のアドレスを再利用するのではなく、新しいアドレスを使用する必要があります。</p>
 <p>ビットコインは他のいくつかのブロックチェーンウォレットとは異なり、無限の数の新しいアドレスを生成できることに注意してください。は次の住所を取得ボタンをクリックすることで新しい住所を生成できます。あなたはアプリケーションの'Addresses'タブですべてのアドレスを見ることができます</p>
 <p>各アドレスにタグを付けることができますので、目的を追跡することができます。</p>
@@ -7340,7 +7340,7 @@ inscriptions:
 <p>その後、サービスの開始時にファイルを使います--config` :</p>
 <p><code>ord --config ord.yaml server</code></p>
 <p>注意してください。 『--config'オプションは'ord'の後で'server'サブコマンドの前にあります。</p>
-<p>'ord'は、設定ファイルの変更をロードするために再起動する必要があります。</p>
+<p><code>ord</code> must be restarted in order to load changes to the config file.</p>
 <h2 id="ordinalscom"><a class="header" href="#ordinalscom"><code>ordinals.com</code></a></h2>
 <p>ordinals.com'インスタンスは'systemd'を使用して'ord'という名前の'ord server'サービスを実行しています。設定ファイルは『/var/lib/ord/ord.yaml'.</p>
 <p>ordinals.com 上で銘文を隠れます:</p>
@@ -7723,7 +7723,7 @@ $ord outputs
 <pre><code>bitcoin-cli generatetoaddress 6 &lt;receive address&gt;
 </code></pre>
 <h3 id="mainnet-dependencies"><a class="header" href="#mainnet-dependencies">Mainnet Dependencies</a></h3>
-<p>To avoid having to change dependency inscription IDs to mainnet inscription IDs, you may utilize a content proxy when testing. <code>ord server</code> accepts a <code>--proxy</code> option, which takes the URL of a another <code>ord server</code> instance. When making a request to <code>/content/&lt;INSCRIPTION_ID&gt;</code> when a content proxy is set and the inscription is not found, <code>ord server</code> will forward the request to the content proxy. This allows you to run a test <code>ord server</code> instance with a mainnet content proxy. You can then use mainnet inscription IDs in your test inscription, which will then return the content of the mainnet inscriptions.</p>
+<p>To avoid having to change dependency inscription IDs to mainnet inscription IDs, you may utilize a content proxy when testing. <code>ord server</code> accepts a <code>--proxy</code> option, which takes the URL of another <code>ord server</code> instance. When making a request to <code>/content/&lt;INSCRIPTION_ID&gt;</code> when a content proxy is set and the inscription is not found, <code>ord server</code> will forward the request to the content proxy. This allows you to run a test <code>ord server</code> instance with a mainnet content proxy. You can then use mainnet inscription IDs in your test inscription, which will then return the content of the mainnet inscriptions.</p>
 <pre><code>ord --regtest server --proxy https://ordinals.com
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="ウォレット"><a class="header" href="#ウォレット">ウォレット</a></h1>

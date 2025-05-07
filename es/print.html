@@ -7213,7 +7213,7 @@ inscripciones:
 <p><img src="guides/collecting/images/wallet_setup_02.png" alt="" /></p>
 <p>Selecciona <code>Use 12 Words</code> (Utilizar 12 palabras) y luego haz clic en <code>Generate New</code> (Generar nueva). Deja passphrase (Frase de contraseña) en blanco.</p>
 <p><img src="guides/collecting/images/wallet_setup_03.png" alt="" /></p>
-<p>Se generará tu nueva frase semilla BIP39 de 12 palabras. Anota esto en un lugar seguro, ya que será tu respaldo para acceder a tu monedero. NUNCA compartas ni muestres esta frase semilla a nadie.</p>
+<p>A new 12 word <a href="https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki">BIP39</a> seed phrase will be generated for you. Write this down somewhere safe as this is your backup to get access to your wallet. NEVER share or show this seed phrase to anyone else.</p>
 <p>Una vez que hayas anotado la frase semilla, haz clic en <code>Confirm Backup</code> (Confirmar copia de seguridad).</p>
 <p><img src="guides/collecting/images/wallet_setup_04.png" alt="" /></p>
 <p>Ingresa la frase que anotaste y luego haz clic en <code>Create Keystore</code>.</p>
@@ -7222,7 +7222,7 @@ inscripciones:
 <p><img src="guides/collecting/images/wallet_setup_06.png" alt="" /></p>
 <p>Haz clic en <code>Apply</code> (aplicar). Luego, agrega una contraseña al monedero si deseas.</p>
 <p><img src="guides/collecting/images/wallet_setup_07.png" alt="" /></p>
-<p>Ahora tienes un monedero que es compatible con <code>ord</code> y que puede ser importado a <code>ord</code> utilizando la frase semilla BIP39. Para recibir ordinals o inscripciones, dirígete a la pestaña <code>Receive</code> (Recibir) y copia una nueva dirección.</p>
+<p>You now have a wallet which is compatible with <code>ord</code>, and can be imported into <code>ord</code> using the <a href="https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki">BIP39</a> Seed Phrase. To receive ordinals or inscriptions, click on the <code>Receive</code> tab and copy a new address.</p>
 <p>Cada vez que quieras recibir, deberías usar una dirección completamente nueva y no reutilizar direcciones existentes.</p>
 <p>Ten en cuenta que bitcoin es diferente a algunos otros monederos de blockchain, en el sentido de que el monedero de bitcoin puede generar un número ilimitado de direcciones nuevas. Puedes generar una dirección nueva haciendo clic en el botón <code>Get Next Address</code> (Obtener la próxima dirección). Puedes ver todas tus direcciones en la pestaña <code>Addresses</code> (Direcciones).</p>
 <p>Puedes asignar una etiqueta a cada dirección, permitiéndote llevar un seguimiento de su propósito o uso.</p>
@@ -7344,7 +7344,7 @@ inscripciones:
 <p>Luego pasa el archivo a <code>--config</code> cuando inicies el servidor:</p>
 <p><code>ord --config ord.yaml server</code></p>
 <p>Ten en cuenta que la opción <code>--config</code> va después de <code>ord</code> pero antes del subcomando <code>server</code>.</p>
-<p>Deberás reiniciar ord para cargar los cambios realizados en el archivo de configuración.</p>
+<p><code>ord</code> must be restarted in order to load changes to the config file.</p>
 <h2 id="ordinalscom"><a class="header" href="#ordinalscom"><code>ordinals.com</code></a></h2>
 <p>Las instancias de <code>ordinals.com</code> utilizan <code>system</code> para ejecutar el servicio del <code>servidor ord</code>, que se llama <code>ord</code>, con un archivo de configuración situado en <code>/var/lib/ord/ord.yaml</code>.</p>
 <p>Para ocultar una inscripción en <code>ordinals.com</code>:</p>
@@ -7728,7 +7728,7 @@ $ord outputs
 <pre><code>bitcoin-cli generatetoaddress 6 &lt;receive address&gt;
 </code></pre>
 <h3 id="dependencias-en-mainnet"><a class="header" href="#dependencias-en-mainnet">Dependencias en Mainnet</a></h3>
-<p>Para evitar tener que cambiar los IDs de inscripción de dependencias a los IDs de inscripción de mainnet, puedes utilizar un proxy de contenido. <code>ord server</code> acepta una opción <code>--proxy</code>, que toma la URL de otra instancia de <code>ord server</code>. Al hacer una solicitud a <code>/content/&lt;ID_DE_INSCRIPCIÓN&gt;</code> cuando se establece un proxy de contenido y no se encuentra la inscripción, <code>ord server</code> reenviará la solicitud al proxy de contenido. Esto te permite ejecutar una instancia de prueba de <code>ord server</code> con un proxy de contenido de mainnet. Luego puedes usar ID de inscripciónes de mainnet en tu inscripción de prueba, lo cual retornará el contenido de las inscripciones en mainnet.</p>
+<p>To avoid having to change dependency inscription IDs to mainnet inscription IDs, you may utilize a content proxy when testing. <code>ord server</code> accepts a <code>--proxy</code> option, which takes the URL of another <code>ord server</code> instance. When making a request to <code>/content/&lt;INSCRIPTION_ID&gt;</code> when a content proxy is set and the inscription is not found, <code>ord server</code> will forward the request to the content proxy. This allows you to run a test <code>ord server</code> instance with a mainnet content proxy. You can then use mainnet inscription IDs in your test inscription, which will then return the content of the mainnet inscriptions.</p>
 <pre><code>ord --regtest server --proxy https://ordinals.com
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="monedero"><a class="header" href="#monedero">Monedero</a></h1>

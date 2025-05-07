@@ -7897,7 +7897,7 @@ ordinals.</p>
 <p><img src="guides/collecting/images/wallet_setup_02.png" alt="" /></p>
 <p>Select <code>Use 12 Words</code> and then click <code>Generate New</code>. Leave the passphrase blank.</p>
 <p><img src="guides/collecting/images/wallet_setup_03.png" alt="" /></p>
-<p>A new 12 word BIP39 seed phrase will be generated for you. Write this down somewhere safe as this is your backup to get access to your wallet. NEVER share or show this seed phrase to anyone else.</p>
+<p>A new 12 word <a href="https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki">BIP39</a> seed phrase will be generated for you. Write this down somewhere safe as this is your backup to get access to your wallet. NEVER share or show this seed phrase to anyone else.</p>
 <p>Once you have written down the seed phrase click <code>Confirm Backup</code>.</p>
 <p><img src="guides/collecting/images/wallet_setup_04.png" alt="" /></p>
 <p>Re-enter the seed phrase which you wrote down, and then click <code>Create Keystore</code>.</p>
@@ -7906,7 +7906,7 @@ ordinals.</p>
 <p><img src="guides/collecting/images/wallet_setup_06.png" alt="" /></p>
 <p>Click <code>Apply</code>. Add a password for the wallet if you want to.</p>
 <p><img src="guides/collecting/images/wallet_setup_07.png" alt="" /></p>
-<p>You now have a wallet which is compatible with <code>ord</code>, and can be imported into <code>ord</code> using the BIP39 Seed Phrase. To receive ordinals or inscriptions, click on the <code>Receive</code> tab and copy a new address.</p>
+<p>You now have a wallet which is compatible with <code>ord</code>, and can be imported into <code>ord</code> using the <a href="https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki">BIP39</a> Seed Phrase. To receive ordinals or inscriptions, click on the <code>Receive</code> tab and copy a new address.</p>
 <p>Each time you want to receive you should use a brand-new address, and not re-use existing addresses.</p>
 <p>Note that bitcoin is different to some other blockchain wallets, in that this wallet can generate an unlimited number of new addresses. You can generate a new address by clicking on the <code>Get Next Address</code> button. You can see all of your addresses in the <code>Addresses</code> tab of the app.</p>
 <p>You can add a label to each address, so you can keep track of what it was used for.</p>
@@ -8048,7 +8048,7 @@ be used.</p>
 <p><code>ord --config ord.yaml server</code></p>
 <p>Note that the <code>--config</code> option comes after <code>ord</code> but before the <code>server</code>
 subcommand.</p>
-<p><code>ord</code> must be restarted in to load changes to the config file.</p>
+<p><code>ord</code> must be restarted in order to load changes to the config file.</p>
 <h2 id="ordinalscom"><a class="header" href="#ordinalscom"><code>ordinals.com</code></a></h2>
 <p>The <code>ordinals.com</code> instances use <code>systemd</code> to run the <code>ord server</code> service,
 which is called <code>ord</code>, with a config file located at <code>/var/lib/ord/ord.yaml</code>.</p>
@@ -8535,7 +8535,7 @@ your dependencies before making the final inscription on mainnet.</p>
 <h3 id="mainnet-dependencies"><a class="header" href="#mainnet-dependencies">Mainnet Dependencies</a></h3>
 <p>To avoid having to change dependency inscription IDs to mainnet inscription IDs,
 you may utilize a content proxy when testing. <code>ord server</code> accepts a
-<code>--proxy</code> option, which takes the URL of a another <code>ord server</code>
+<code>--proxy</code> option, which takes the URL of another <code>ord server</code>
 instance. When making a request to <code>/content/&lt;INSCRIPTION_ID&gt;</code> when a content
 proxy is set and the inscription is not found, <code>ord server</code> will forward the
 request to the content proxy. This allows you to run a test <code>ord server</code>

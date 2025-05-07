@@ -7209,7 +7209,7 @@ inscriptions:
 <p><img src="guides/collecting/images/wallet_setup_02.png" alt="" /></p>
 <p>选择<code>Use 12 Words</code>，然后点击 <code>Generate New</code>。密码短语留空。</p>
 <p><img src="guides/collecting/images/wallet_setup_03.png" alt="" /></p>
-<p>将为你生成一个新的12词BIP39种子短语。将此短语写在安全的地方，这是获取钱包访问权限的备份。切勿与他人分享或显示这个种子短语。</p>
+<p>A new 12 word <a href="https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki">BIP39</a> seed phrase will be generated for you. Write this down somewhere safe as this is your backup to get access to your wallet. NEVER share or show this seed phrase to anyone else.</p>
 <p>一旦你把种子短语写下来，点击 <code>Confirm Backup</code>.</p>
 <p><img src="guides/collecting/images/wallet_setup_04.png" alt="" /></p>
 <p>重新输入你记下的种子短语，然后点击 <code>Create Keystore</code>.</p>
@@ -7218,7 +7218,7 @@ inscriptions:
 <p><img src="guides/collecting/images/wallet_setup_06.png" alt="" /></p>
 <p>点击 <code>Apply</code>。如果你想的话，可以为钱包添加一个密码。</p>
 <p><img src="guides/collecting/images/wallet_setup_07.png" alt="" /></p>
-<p>你现在有了一个兼容<code>ord</code>的钱包，可以使用BIP39种子短语导入到 <code>ord</code>。要接收序数或铭文，点击 <code>Receive</code>选项卡并复制一个新地址。</p>
+<p>You now have a wallet which is compatible with <code>ord</code>, and can be imported into <code>ord</code> using the <a href="https://github.com/bitcoin/bips/blob/master/bip-0039.mediawiki">BIP39</a> Seed Phrase. To receive ordinals or inscriptions, click on the <code>Receive</code> tab and copy a new address.</p>
 <p>每次你想接收时，都应该使用一个全新的地址，而不是重复使用现有的地址。</p>
 <p>注意，比特币与一些其他区块链钱包不同，这个钱包可以生成无限数量的新地址。你可以通过点击获取下一个地址按钮生成新地址。你可以在应用程序的<code>Addresses</code>选项卡中看到所有的地址。</p>
 <p>你可以给每个地址添加一个标签，这样你就可以跟踪它的用途。</p>
@@ -7340,7 +7340,7 @@ inscriptions:
 <p>然后将文件在服务启动的使用使用 <code>--config</code> :</p>
 <p><code>ord --config ord.yaml server</code></p>
 <p>请注意， <code>--config</code> 选项的位置在  <code>ord</code> 之后但是在  <code>server</code>子命令前。</p>
-<p><code>ord</code> 必须重启才可以加载在配置文件中的更改。</p>
+<p><code>ord</code> must be restarted in order to load changes to the config file.</p>
 <h2 id="ordinalscom"><a class="header" href="#ordinalscom"><code>ordinals.com</code></a></h2>
 <p><code>ordinals.com</code> 实例使用 <code>systemd</code> 运行名为 <code>ord</code>的 <code>ord server</code> 服务，配置文件在 <code>/var/lib/ord/ord.yaml</code>.</p>
 <p>要在 ordinals.com 上隐藏铭文:</p>
@@ -7723,7 +7723,7 @@ $ord outputs
 <pre><code>bitcoin-cli generatetoaddress 6 &lt;receive address&gt;
 </code></pre>
 <h3 id="主网依赖"><a class="header" href="#主网依赖">主网依赖</a></h3>
-<p>为了避免在测试时必须将依赖铭文ID更改为主网铭文ID，你可以在测试时使用内容代理。<code>ord server</code>接受一个<code>--proxy</code>选项，它需要另一个<code>ord server</code>实例的URL。当设置了内容代理并且铭文未找到时，向<code>/content/&lt;INSCRIPTION_ID&gt;</code>发出请求，<code>ord server</code>将会将请求转发给内容代理。这允许你运行一个带有主网内容代理的测试<code>ord server</code>实例。然后你可以在测试铭文中使用主网铭文ID，这将返回主网铭文的内容。</p>
+<p>To avoid having to change dependency inscription IDs to mainnet inscription IDs, you may utilize a content proxy when testing. <code>ord server</code> accepts a <code>--proxy</code> option, which takes the URL of another <code>ord server</code> instance. When making a request to <code>/content/&lt;INSCRIPTION_ID&gt;</code> when a content proxy is set and the inscription is not found, <code>ord server</code> will forward the request to the content proxy. This allows you to run a test <code>ord server</code> instance with a mainnet content proxy. You can then use mainnet inscription IDs in your test inscription, which will then return the content of the mainnet inscriptions.</p>
 <pre><code>ord --regtest server --proxy https://ordinals.com
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="钱包"><a class="header" href="#钱包">钱包</a></h1>
