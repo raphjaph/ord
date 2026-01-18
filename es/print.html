@@ -629,28 +629,47 @@ OP_IF
 OP_ENDIF
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="properties"><a class="header" href="#properties">Properties</a></h1>
-<p>Inscriptions may include <a href="https://cbor.io/">CBOR</a> properties, stored as data pushes in fields with tag <code>17</code>. Since data pushes are limited to 520 bytes, CBOR longer than 520 bytes must be split into multiple tag <code>17</code> fields, which will then be concatenated before decoding.</p>
-<p>Properties are a structured counterpart to <a href="inscriptions/metadata.html">metadata</a>. While metadata may contain arbitrary CBOR which has no protocol-defined meaning and is presented on <code>/inscription</code> as HTML, properties have protocol-defined meaning and must conform to a strict schema.</p>
-<p>Indefinite-length types are not supported. All maps, arrays, byte strings, and text strings must be definite.</p>
+<p>Inscriptions may include <a href="https://cbor.io/">CBOR</a> properties, stored as data pushes in fields with tag <code>17</code>. Since data pushes are limited to 520 bytes, CBOR longer than 520 bytes must be split into multiple tag <code>17</code> fields which are then concatenated before decoding.</p>
+<p>Properties are a structured counterpart to <a href="inscriptions/metadata.html">metadata</a>. While metadata may contain arbitrary CBOR which has no protocol-defined meaning, and is presented on <code>/inscription</code> as free-form HTML, properties have protocol-defined meaning and must conform to a strict schema.</p>
+<p>Indefinite-length CBOR types are not supported in properties. All maps, arrays, byte strings, and text strings must be definite.</p>
 <p>The non-normative <a href="https://datatracker.ietf.org/doc/html/rfc8610">CDDL</a> schema of the properties value is as follows:</p>
 <pre><code class="language-cddl">Properties = {
-  ? 0: [*GalleryItem],
+  ? 0: [*Item],
+  ? 1: Attributes,
   * any =&gt; any,
 }
 
-GalleryItem = {
-  ? 0: bstr .size (32..36),
+Item = {
+  ? 0: bytes .size (32..36),
+  ? 1: Attributes,
   * any =&gt; any,
 }
+
+Attributes = {
+  ? 0: text,   ; title
+  ? 1: Traits, ; traits
+  * any =&gt; any,
+}
+
+Traits = {
+  ; trait names must be unique
+  text =&gt; Trait,
+}
+
+Trait = bool / int / null / text;
 </code></pre>
 <p>The above CDDL schema is provided as a convenience. As always, the ordinals reference implementation <code>ord</code> is the normative specification of inscriptions, and thus the properties field.</p>
-<p>Fields matching the <code>* any =&gt; any</code> wildcard must be ignored, for compatibility with future additions.</p>
+<p>Fields matching the <code>* any =&gt; any</code> wildcard must be accepted but ignored, for compatibility with future additions.</p>
 <h1 id="galleries"><a class="header" href="#galleries">Galleries</a></h1>
-<p>Inscriptions whose properties field contains <code>GalleryItem</code>s are galleries.</p>
-<p>Galleries contain <code>GalleryItem</code>s, whose only defined key <code>0</code> contains a serialized inscription ID. Inscription ID <code>TXIDiINDEX</code> is serialized as a byte string containing the 32 byte TXID, concatenated with by the four-byte little-endian <code>INDEX</code>. Trailing zeros may be removed from four-byte <code>INDEX</code>, so IDs ending in <code>i0</code> may be serialized in 32 bytes.</p>
+<p>Inscriptions whose properties field contains <code>Item</code>s are galleries.</p>
+<p>Galleries contain <code>Item</code>s, whose key <code>0</code> contains a serialized inscription ID. Inscription ID <code>TXIDiINDEX</code> is serialized as a byte string containing the 32 byte <code>TXID</code>, concatenated with by the four-byte little-endian <code>INDEX</code>. Trailing zeros may be removed from four-byte <code>INDEX</code>, so IDs ending in <code>i0</code> may be serialized in 32 bytes.</p>
 <p>Gallery items are displayed on the inscriptions <code>/inscription</code> page on the explorer.</p>
 <p>Galleries are similar to children, in that they provide a way to create collections of inscriptions. However, galleries are permissionless. Anyone may create a gallery including any inscriptions. Thus, inclusion in a gallery does not imply provenance. Additionally, because of this, inclusion in a gallery does not create a backlink from the gallery item's <code>/inscription</code> page to the gallery.</p>
 <p>Galleries may be created when batch inscribing with <code>ord wallet batch</code> by including an array of string inscription IDs of under the <code>gallery</code> key of the inscription entry in the batch file, or when using <code>ord wallet inscribe</code> using the <code>--gallery</code> option.</p>
+<h1 id="attributes"><a class="header" href="#attributes">Attributes</a></h1>
+<p>Attributes are structured metadata that may be attached to both inscriptions and gallery items.</p>
+<h2 id="traits"><a class="header" href="#traits">Traits</a></h2>
+<p>Traits are a structured counterpart to metadata. While metadata may be arbitrary CBOR, traits are ordered maps of string names to values. Names must be unique, and values may be booleans, integers, <code>null</code>, or strings.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="proveniencia"><a class="header" href="#proveniencia">Proveniencia</a></h1>
 <p>El propietario de una inscripción puede crear inscripciones hijos (secundarias), estableciendo proveniencia en cadena que indica que esta fue creada por el propietario de la inscripción padre. Esto se puede utilizar para colecciones, donde las inscripciones hijos de una inscripción padre son miembros de la misma colección.</p>
 <p>Las inscripciones hijos pueden tener a su vez sus propias inscripciones hijos, lo que permite jerarquías complejas. Por ejemplo, un artista podría crear una inscripción representándose a sí mismo, con subinscripciones que representan las colecciones que vaya a crear, y que las inscripciones hijos de esas subinscripciones sean elementos de esas colecciones.</p>
@@ -1870,7 +1889,7 @@ i               # separator
 <h5 id="minteo-1"><a class="header" href="#minteo-1">Minteo</a></h5>
 <p>El campo <code>Mint</code> especifica el ID de la runa que se minteara en dicha transacción.</p>
 <h5 id="puntero-2"><a class="header" href="#puntero-2">Puntero</a></h5>
-<p>The <code>Pointer</code> field contains the index of the output to which runes unallocated by edicts should be transferred. If the <code>Pointer</code> field is absent, unallocated runes are transferred to the first non-<code>OP_RETURN</code> output. If the pointer is greater than the number of outputs, the runestone is a cenotaph.</p>
+<p>The <code>Pointer</code> field contains the index of the output to which runes unallocated by edicts should be transferred. If the <code>Pointer</code> field is absent, unallocated runes are transferred to the first non-<code>OP_RETURN</code> output. If the pointer is greater than or equal to the number of outputs, the runestone is a cenotaph.</p>
 <h5 id="cenotafio"><a class="header" href="#cenotafio">Cenotafio</a></h5>
 <p>El campo <code>Cenotaph</code> no es reconocido.</p>
 <h5 id="divisibilidad-1"><a class="header" href="#divisibilidad-1">Divisibilidad</a></h5>
@@ -1913,7 +1932,7 @@ i               # separator
 <p>Si la piedra rúnica que produjo el cenotafio es un minteo, esta se contabiliza contra el límite de minteos y las runas minteadas se queman.</p>
 </li>
 </ul>
-<p>Los cenotafios pueden generarse si una piedra rúnica contiene una etiqueta par no reconocida, una bandera no reconocida, un edicto con un número de salida mayor al número de entradas, un ID de runa con bloque cero y un índice de transacción distinto a cero, un varint malformado, una instrucción que no es push de datos en el script pubkey de la salida de la piedra rúnica, una etiqueta sin valor posterior o enteros al final que no formen parte de un edicto.</p>
+<p>Cenotaphs may be created if a runestone contains an unrecognized even tag, an unrecognized flag, an edict with an output number greater than the number of outputs, a rune ID with block zero and nonzero transaction index, a malformed varint, a non-datapush instruction in the runestone output script pubkey, a tag without a following value, trailing integers not part of an edict, or a pointer greater than or equal to the number of outputs.</p>
 <h4 id="ejecución-de-la-piedra-rúnica"><a class="header" href="#ejecución-de-la-piedra-rúnica">Ejecución de la Piedra Rúnica</a></h4>
 <p>Las piedras rúnicas se ejecutan en el orden en que sus transacciones se incluyan en los bloques.</p>
 <h5 id="grabados"><a class="header" href="#grabados">Grabados</a></h5>
@@ -3440,10 +3459,30 @@ i               # separator
   "fee": 322,
   "height": 767430,
   "id": "6fb976ab49dcec017f1e201e84395983204ae1a7c2abf7ced0a85d692e442799i0",
+  "metaprotocol": "LOL-420",
   "next": "26482871f33f1051f450f2da9af275794c0b5f1c61ebf35e4467fb42c2813403i0",
   "number": 0,
   "parents": [],
   "previous": null,
+  "properties": {
+    "gallery": [
+      {
+        "id": "ab924ff229beca227bf40221faf492a20b5e2ee4f084524c84a5f98b80fe527fi0",
+        "attributes": {
+          "title": "goodbye",
+          "traits": {
+            "amazing": true
+          }
+        }
+      }
+    ],
+    "attributes": {
+      "title": "hello",
+      "traits": {
+        "color": "blue"
+      }
+    }
+  },
   "rune": null,
   "sat": null,
   "satpoint": "47c7260764af2ee17aa584d9c035f2e5429aefd96b8016cfe0e3f0bcf04869a3:0:0",
@@ -7188,6 +7227,12 @@ inscripciones:
   delegado: 6ac5cacb768794f4fd7a78bf00f2074891fce68bd65c4ff36e77177237aacacai0
   # destino (opcional, si no se especifica un destino, se usará una nueva dirección de cambio de billetera)
     destino: bc1qw508d6qejxtdg4y5r3zarvary0c5xw7kv8f3t4
+  # title (optional)
+  title: Mangos Deliciosos
+  # traits (optional)
+  traits:
+    color: orange
+    deliciousness: 1000
   # metadatos de la inscripción (opcional)
     metadatos:
     título: Mangos Deliciosos
@@ -7214,8 +7259,12 @@ inscripciones:
 - archivo: gallery.png
   # gallery items
   gallery:
-  - a4676e57277b70171d69dc6ad2781485b491fe0ff5870f6f6b01999e7180b29ei0
-  - a4676e57277b70171d69dc6ad2781485b491fe0ff5870f6f6b01999e7180b29ei3
+  - id: a4676e57277b70171d69dc6ad2781485b491fe0ff5870f6f6b01999e7180b29ei0
+    título: Incredible
+    traits:
+      background: blue
+      cool: true
+  - id: a4676e57277b70171d69dc6ad2781485b491fe0ff5870f6f6b01999e7180b29ei3
 </code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="coleccionar"><a class="header" href="#coleccionar">Coleccionar</a></h1>
 <p>Actualmente, ord es el único monedero que tiene la funcionalidad de control de sat (sat-control) y selección de sat (sat-selection), funciones indispensables para almacenar y enviar de forma segura sats raros e inscripciones, ahora conocidos como ordinals.</p>
