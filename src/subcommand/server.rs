@@ -5109,7 +5109,7 @@ mod tests {
             }],
             ..default()
           }
-          .to_cbor(),
+          .to_inline_cbor(),
           ..default()
         }
         .to_witness(),
@@ -5671,12 +5671,14 @@ next
         .map(|&id| properties::Item {
           id: Some(id),
           attributes: Attributes::default(),
+          index: None,
         })
         .collect::<Vec<_>>();
 
       let properties = Properties {
         attributes: Attributes::default(),
         gallery: gallery_items,
+        txids: Vec::new(),
       };
 
       server.core.broadcast_tx(TransactionTemplate {
@@ -5687,7 +5689,7 @@ next
           Inscription {
             content_type: Some("image/png".into()),
             body: Some("gallery".into()),
-            properties: properties.to_cbor(),
+            properties: properties.to_inline_cbor(),
             ..default()
           }
           .to_witness(),
@@ -5765,12 +5767,14 @@ next
       .map(|&id| properties::Item {
         id: Some(id),
         attributes: Attributes::default(),
+        index: None,
       })
       .collect::<Vec<_>>();
 
     let properties = Properties {
       attributes: Attributes::default(),
       gallery: gallery_items,
+      txids: Vec::new(),
     };
 
     server.mine_blocks(1);
@@ -5784,7 +5788,7 @@ next
           Inscription {
             content_type: Some("text/plain".into()),
             body: Some("gallery".into()),
-            properties: properties.to_cbor(),
+            properties: properties.to_inline_cbor(),
             ..default()
           }
           .to_witness(),
@@ -5854,7 +5858,7 @@ next
               }],
               ..default()
             }
-            .to_cbor(),
+            .to_inline_cbor(),
             ..default()
           }
           .to_witness(),
@@ -5915,7 +5919,7 @@ next
                 }],
                 ..default()
               }
-              .to_cbor(),
+              .to_inline_cbor(),
               ..default()
             }
             .to_witness(),
@@ -5997,7 +6001,7 @@ next
             }],
             ..default()
           }
-          .to_cbor(),
+          .to_inline_cbor(),
           ..default()
         }
         .to_witness(),
@@ -6023,7 +6027,7 @@ next
               }],
               ..default()
             }
-            .to_cbor(),
+            .to_inline_cbor(),
             ..default()
           }
           .to_witness(),
@@ -6338,7 +6342,7 @@ next
             }],
             ..default()
           }
-          .to_cbor(),
+          .to_inline_cbor(),
           ..default()
         }
         .to_witness(),
@@ -6498,6 +6502,7 @@ next
     let properties = Properties {
       attributes: Attributes::default(),
       gallery: gallery_items,
+      txids: Vec::new(),
     };
 
     server.mine_blocks(1);
@@ -6510,7 +6515,7 @@ next
         Inscription {
           content_type: Some("text/plain".into()),
           body: Some("gallery".into()),
-          properties: properties.to_cbor(),
+          properties: properties.to_inline_cbor(),
           ..default()
         }
         .to_witness(),
