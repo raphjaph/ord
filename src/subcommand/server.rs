@@ -153,7 +153,7 @@ impl Server {
     handle: Handle<SocketAddr>,
     http_port_tx: Option<std::sync::mpsc::Sender<u16>>,
   ) -> SubcommandResult {
-    Runtime::new()?.block_on(async {
+    settings.runtime()?.block_on(async {
       let index_clone = index.clone();
       let integration_test = settings.integration_test();
 
