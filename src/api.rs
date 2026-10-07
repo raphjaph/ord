@@ -90,6 +90,20 @@ pub struct ChildInscriptions {
 }
 
 #[derive(Debug, PartialEq, Serialize, Deserialize)]
+pub struct ChildMetadata {
+  pub id: InscriptionId,
+  /// Hex-encoded raw CBOR metadata, matching the representation returned by /r/metadata.
+  pub metadata: Option<String>,
+}
+
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
+pub struct ChildrenMetadata {
+  pub children: Vec<ChildMetadata>,
+  pub more: bool,
+  pub page: usize,
+}
+
+#[derive(Debug, PartialEq, Serialize, Deserialize)]
 pub struct Gallery {
   pub ids: Vec<InscriptionId>,
   pub more: bool,

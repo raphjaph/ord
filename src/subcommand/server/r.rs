@@ -1,5 +1,25 @@
 use super::*;
 
+pub(super) async fn block(
+  Extension(index): Extension<Arc<Index>>,
+  Path(DeserializeFromStr(query)): Path<DeserializeFromStr<query::Block>>,
+) -> ServerResult<Json<String>> {
+  task::block_in_place(|| {
+    let hash = match query {
+      query::Block::Hash(hash) => hash,
+      query::Block::Height(height) => index
+        .block_hash(Some(height))?
+        .ok_or_not_found(|| format!("block {height}"))?,
+    };
+
+    Ok(Json(
+      index
+        .get_block_hex(hash)?
+        .ok_or_not_found(|| format!("block {hash}"))?,
+    ))
+  })
+}
+
 pub(super) async fn blockhash(
   Extension(index): Extension<Arc<Index>>,
 ) -> ServerResult<Json<String>> {
@@ -160,6 +180,13 @@ pub(super) async fn children_inscriptions(
   children_inscriptions_paginated(Extension(index), Path((inscription_id, 0))).await
 }
 
+pub(super) async fn children_metadata(
+  Extension(index): Extension<Arc<Index>>,
+  Path(inscription_id): Path<InscriptionId>,
+) -> ServerResult {
+  children_metadata_paginated(Extension(index), Path((inscription_id, 0))).await
+}
+
 pub(super) async fn children_inscriptions_paginated(
   Extension(index): Extension<Arc<Index>>,
   Path((parent, page)): Path<(InscriptionId, usize)>,
@@ -180,6 +207,63 @@ pub(super) async fn children_inscriptions_paginated(
 
     Ok(
       Json(api::ChildInscriptions {
+        children,
+        more,
+        page,
+      })
+      .into_response(),
+    )
+  })
+}
+
+pub(super) async fn children_metadata_paginated(
+  Extension(index): Extension<Arc<Index>>,
+  Path((parent, page)): Path<(InscriptionId, usize)>,
+) -> ServerResult {
+  task::block_in_place(|| {
+    let parent_sequence_number = index
+      .get_inscription_entry(parent)?
+      .ok_or_not_found(|| format!("inscription {parent}"))?
+      .sequence_number;
+
+    let (ids, more) =
+      index.get_children_by_sequence_number_paginated(parent_sequence_number, 100, page)?;
+
+    // Metadata lives in inscription envelopes, so fetch and parse each unique
+    // reveal transaction once even when multiple children share that txid.
+    let mut parsed_inscriptions_by_txid = std::collections::BTreeMap::new();
+
+    for inscription_id in &ids {
+      if parsed_inscriptions_by_txid.contains_key(&inscription_id.txid) {
+        continue;
+      }
+
+      let transaction = index
+        .get_transaction(inscription_id.txid)?
+        .ok_or_not_found(|| format!("transaction {}", inscription_id.txid))?;
+
+      parsed_inscriptions_by_txid.insert(
+        inscription_id.txid,
+        ParsedEnvelope::from_transaction(&transaction),
+      );
+    }
+
+    let children = ids
+      .into_iter()
+      .map(|inscription_id| {
+        let parsed_inscriptions = parsed_inscriptions_by_txid
+          .get(&inscription_id.txid)
+          .ok_or_else(|| anyhow!("missing parsed inscription cache"))?;
+
+        Ok(api::ChildMetadata {
+          id: inscription_id,
+          metadata: get_metadata_hex(parsed_inscriptions, inscription_id),
+        })
+      })
+      .collect::<Result<Vec<api::ChildMetadata>>>()?;
+
+    Ok(
+      Json(api::ChildrenMetadata {
         children,
         more,
         page,
@@ -585,6 +669,13 @@ fn get_relative_inscription(
     satpoint,
     timestamp: timestamp(entry.timestamp.into()).timestamp(),
   })
+}
+
+fn get_metadata_hex(parsed_inscriptions: &[ParsedEnvelope], id: InscriptionId) -> Option<String> {
+  parsed_inscriptions
+    .get(id.index as usize)
+    .and_then(|parsed| parsed.payload.metadata.as_ref())
+    .map(hex::encode)
 }
 
 pub(super) async fn tx(

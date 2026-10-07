@@ -53,7 +53,7 @@ mod utxo_entry;
 #[cfg(test)]
 pub(crate) mod testing;
 
-const SCHEMA_VERSION: u64 = 35;
+const SCHEMA_VERSION: u64 = 34;
 
 define_multimap_table! { LATEST_CHILD_SEQUENCE_NUMBER_TO_COLLECTION_SEQUENCE_NUMBER, u32, u32 }
 define_multimap_table! { SAT_TO_SEQUENCE_NUMBER, u64, u32 }
@@ -707,6 +707,13 @@ impl Index {
   }
 
   pub fn export(&self, filename: &String, include_addresses: bool) -> Result {
+    if include_addresses && !self.index_addresses {
+      eprintln!(
+        "warning: exporting addresses without `--index-addresses` fetches every transaction over \
+         RPC, which is very slow",
+      );
+    }
+
     let mut writer = BufWriter::new(File::create(filename)?);
     let rtx = self.database.begin_read()?;
 
@@ -1234,6 +1241,10 @@ impl Index {
 
   pub fn get_block_by_hash(&self, hash: BlockHash) -> Result<Option<Block>> {
     self.client.get_block(&hash).into_option()
+  }
+
+  pub fn get_block_hex(&self, hash: BlockHash) -> Result<Option<String>> {
+    self.client.get_block_hex(&hash).into_option()
   }
 
   pub fn get_collections_paginated(
@@ -1855,8 +1866,8 @@ impl Index {
       let sat_ranges = utxo_entry.value().parse(self).sat_ranges();
 
       let mut offset = 0;
-      for chunk in sat_ranges.chunks_exact(11) {
-        let (start, end) = SatRange::load(chunk.try_into().unwrap());
+      for chunk in sat_ranges.as_chunks::<11>().0 {
+        let (start, end) = SatRange::load(*chunk);
         if start <= sat && sat < end {
           return Ok(Some(SatPoint {
             outpoint: Entry::load(*outpoint.value()),
@@ -1895,8 +1906,8 @@ impl Index {
       let sat_ranges = utxo_entry.value().parse(self).sat_ranges();
 
       let mut offset = 0;
-      for sat_range in sat_ranges.chunks_exact(11) {
-        let (start, end) = SatRange::load(sat_range.try_into().unwrap());
+      for sat_range in sat_ranges.as_chunks::<11>().0 {
+        let (start, end) = SatRange::load(*sat_range);
 
         if end > range_start && start < range_end {
           let overlap_start = start.max(range_start);
@@ -1940,8 +1951,10 @@ impl Index {
             .value()
             .parse(self)
             .sat_ranges()
-            .chunks_exact(11)
-            .map(|chunk| SatRange::load(chunk.try_into().unwrap()))
+            .as_chunks::<11>()
+            .0
+            .iter()
+            .map(|chunk| SatRange::load(*chunk))
             .collect::<Vec<(u64, u64)>>()
         }),
     )

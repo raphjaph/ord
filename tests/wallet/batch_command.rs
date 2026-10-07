@@ -1619,7 +1619,7 @@ fn batch_can_etch_rune() {
 
   let pointer = reveal.output.len() - 2;
 
-  assert_eq!(runestone.pointers, vec![u32::try_from(pointer).unwrap()]);
+  assert_eq!(runestone.pointer, Some(pointer.try_into().unwrap()));
 
   assert_eq!(
     reveal.output[pointer].script_pubkey,
@@ -1692,7 +1692,7 @@ fn batch_can_etch_turbo_rune() {
   ord.assert_response_regex(
     "/rune/AAAAAAAAAAAAA",
     format!(
-      r".*\s*<dt>turbo</dt>\s*<dd>true</dd>.*<dt>parent</dt>\s*<dd><a class=collapse href=/inscription/{parent}>{parent}</a></dd>.*"
+      r".*\s*<dt>turbo</dt>\s*<dd class=turbo>true</dd>.*<dt>parent</dt>\s*<dd><a class=collapse href=/inscription/{parent}>{parent}</a></dd>.*"
     ),
   );
 }
@@ -2992,14 +2992,11 @@ inscriptions:
 
   let request = ord.request("/gallery/100/2");
   assert_eq!(request.status(), 404);
-  assert_eq!(
-    request.text().unwrap(),
-    format!("inscription 100 not found"),
-  );
+  assert_eq!(request.text().unwrap(), "inscription 100 not found");
 
   let request = ord.request("/gallery/hello/2");
   assert_eq!(request.status(), 404);
-  assert_eq!(request.text().unwrap(), format!("sat index required"));
+  assert_eq!(request.text().unwrap(), "sat index required");
 }
 
 #[test]

@@ -17,6 +17,7 @@ use {
     Router,
     extract::{DefaultBodyLimit, Extension, Json, Path, Query},
     http::{self, HeaderMap, HeaderName, HeaderValue, StatusCode, Uri, header},
+    middleware,
     response::{IntoResponse, Redirect, Response},
     routing::{get, post},
   },
@@ -131,7 +132,7 @@ pub struct Server {
   #[arg(long, help = "Redirect HTTP traffic to HTTPS.")]
   pub(crate) redirect_http_to_https: bool,
   #[arg(long, alias = "nosync", help = "Do not update the index.")]
-  pub(crate) no_sync: bool,
+  pub no_sync: bool,
   #[arg(
     long,
     help = "Proxy `/content/INSCRIPTION_ID` and other recursive endpoints to `<PROXY>` if the inscription is not present on current chain."
@@ -285,6 +286,7 @@ impl Server {
         .route("/blockhash/{height}", get(r::block_hash_from_height_string))
         .route("/blockheight", get(r::blockheight_string))
         .route("/blocktime", get(r::blocktime_string))
+        .route("/r/block/{query}", get(r::block))
         .route("/r/blockhash", get(r::blockhash))
         .route("/r/blockhash/{height}", get(r::blockhash_at_height))
         .route("/r/blockheight", get(r::blockheight_string))
@@ -297,6 +299,14 @@ impl Server {
         .route(
           "/r/children/{inscription_id}/inscriptions/{page}",
           get(r::children_inscriptions_paginated),
+        )
+        .route(
+          "/r/children/{inscription_id}/metadata",
+          get(r::children_metadata),
+        )
+        .route(
+          "/r/children/{inscription_id}/metadata/{page}",
+          get(r::children_metadata_paginated),
         )
         .route("/r/parents/{inscription_id}", get(r::parents))
         .route(
@@ -334,12 +344,15 @@ impl Server {
           "/r/sat/{sat_number}/at/{index}/content",
           get(r::sat_at_index_content),
         )
-        .layer(axum::middleware::from_fn(Self::proxy_layer));
+        .layer(middleware::from_fn(Self::proxy_layer));
 
       let router = router.merge(proxiable_routes);
 
       let router = router
         .fallback(Self::fallback)
+        .layer(middleware::from_fn(
+          Self::reject_service_worker_script_requests,
+        ))
         .layer(Extension(index))
         .layer(Extension(server_config.clone()))
         .layer(Extension(settings.clone()))
@@ -587,7 +600,7 @@ impl Server {
   async fn proxy_layer(
     server_config: Extension<Arc<ServerConfig>>,
     request: http::Request<axum::body::Body>,
-    next: axum::middleware::Next,
+    next: middleware::Next,
   ) -> ServerResult {
     let path = request.uri().path().to_owned();
 
@@ -618,6 +631,17 @@ impl Server {
     }
 
     Ok(response)
+  }
+
+  async fn reject_service_worker_script_requests(
+    request: http::Request<axum::body::Body>,
+    next: middleware::Next,
+  ) -> Response {
+    if request.headers().contains_key("service-worker") {
+      (StatusCode::FORBIDDEN, "service workers are forbidden").into_response()
+    } else {
+      next.run(request).await
+    }
   }
 
   fn index_height(index: &Index) -> ServerResult<Height> {
@@ -4399,6 +4423,28 @@ mod tests {
   }
 
   #[test]
+  fn recursive_block_hex_endpoint() {
+    let server = TestServer::new();
+
+    server.assert_response("/r/block/1", StatusCode::NOT_FOUND, "block 1 not found");
+
+    let block = server.mine_blocks(1)[0].clone();
+    let hex = format!("\"{}\"", consensus::encode::serialize_hex(&block));
+
+    server.assert_response("/r/block/1", StatusCode::OK, &hex);
+    server.assert_response(
+      format!("/r/block/{}", block.block_hash()),
+      StatusCode::OK,
+      &hex,
+    );
+    server.assert_response(
+      "/r/block/467a86f0642b1d284376d13a98ef58310caa49502b0f9a560ee222e0a122fe16",
+      StatusCode::NOT_FOUND,
+      "block 467a86f0642b1d284376d13a98ef58310caa49502b0f9a560ee222e0a122fe16 not found",
+    );
+  }
+
+  #[test]
   fn detect_unrecoverable_reorg() {
     let test_server = TestServer::new();
 
@@ -7913,6 +7959,104 @@ next
   }
 
   #[test]
+  fn child_metadata_recursive_endpoint() {
+    let server = TestServer::builder().chain(Chain::Regtest).build();
+    server.mine_blocks(1);
+
+    let parent_txid = server.core.broadcast_tx(TransactionTemplate {
+      inputs: &[(1, 0, 0, inscription("text/plain", "hello").to_witness())],
+      ..default()
+    });
+
+    let parent_inscription_id = InscriptionId {
+      txid: parent_txid,
+      index: 0,
+    };
+
+    server.assert_response(
+      format!("/r/children/{parent_inscription_id}/metadata"),
+      StatusCode::NOT_FOUND,
+      &format!("inscription {parent_inscription_id} not found"),
+    );
+
+    server.mine_blocks(1);
+
+    let child_metadata_json =
+      server.get_json::<api::ChildrenMetadata>(format!("/r/children/{parent_inscription_id}/metadata"));
+    assert_eq!(child_metadata_json.children.len(), 0);
+
+    let mut metadata = Vec::new();
+    ciborium::into_writer("child metadata", &mut metadata).unwrap();
+    let metadata_hex = hex::encode(&metadata);
+
+    let mut builder = script::Builder::new();
+    builder = Inscription {
+      content_type: Some("text/plain".into()),
+      body: Some("hello".into()),
+      metadata: Some(metadata),
+      parents: vec![parent_inscription_id.value()],
+      unrecognized_even_field: false,
+      ..default()
+    }
+    .append_reveal_script_to_builder(builder);
+
+    for _ in 0..110 {
+      builder = Inscription {
+        content_type: Some("text/plain".into()),
+        body: Some("hello".into()),
+        parents: vec![parent_inscription_id.value()],
+        unrecognized_even_field: false,
+        ..default()
+      }
+      .append_reveal_script_to_builder(builder);
+    }
+
+    let witness = Witness::from_slice(&[builder.into_bytes(), Vec::new()]);
+
+    let txid = server.core.broadcast_tx(TransactionTemplate {
+      inputs: &[(2, 0, 0, witness), (2, 1, 0, Default::default())],
+      ..default()
+    });
+
+    server.mine_blocks(1);
+
+    let first_child_inscription_id = InscriptionId { txid, index: 0 };
+    let hundredth_child_inscription_id = InscriptionId { txid, index: 99 };
+    let hundred_first_child_inscription_id = InscriptionId { txid, index: 100 };
+    let hundred_eleventh_child_inscription_id = InscriptionId { txid, index: 110 };
+
+    let child_metadata_json =
+      server.get_json::<api::ChildrenMetadata>(format!("/r/children/{parent_inscription_id}/metadata"));
+
+    assert_eq!(child_metadata_json.children.len(), 100);
+    assert_eq!(child_metadata_json.children[0].id, first_child_inscription_id);
+    assert_eq!(child_metadata_json.children[0].metadata, Some(metadata_hex));
+    assert_eq!(
+      child_metadata_json.children[99].id,
+      hundredth_child_inscription_id
+    );
+    assert_eq!(child_metadata_json.children[99].metadata, None);
+    assert!(child_metadata_json.more);
+    assert_eq!(child_metadata_json.page, 0);
+
+    let child_metadata_json = server
+      .get_json::<api::ChildrenMetadata>(format!("/r/children/{parent_inscription_id}/metadata/1"));
+
+    assert_eq!(child_metadata_json.children.len(), 11);
+    assert_eq!(
+      child_metadata_json.children[0].id,
+      hundred_first_child_inscription_id
+    );
+    assert_eq!(
+      child_metadata_json.children[10].id,
+      hundred_eleventh_child_inscription_id
+    );
+    assert_eq!(child_metadata_json.children[0].metadata, None);
+    assert!(!child_metadata_json.more);
+    assert_eq!(child_metadata_json.page, 1);
+  }
+
+  #[test]
   fn parent_inscriptions_recursive_endpoint() {
     let server = TestServer::builder().chain(Chain::Regtest).build();
     server.mine_blocks(1);
@@ -8278,6 +8422,33 @@ next
 
     server.assert_response(format!("/content/{id}"), StatusCode::OK, "foo");
     server_with_proxy.assert_response(format!("/content/{id}"), StatusCode::OK, "foo");
+  }
+
+  #[test]
+  fn service_worker_script_requests_are_forbidden() {
+    let server = TestServer::builder().chain(Chain::Regtest).build();
+
+    server.mine_blocks(1);
+
+    let txid = server.core.broadcast_tx(TransactionTemplate {
+      inputs: &[(1, 0, 0, inscription("text/javascript", "foo").to_witness())],
+      ..default()
+    });
+
+    server.mine_blocks(1);
+
+    let id = InscriptionId { txid, index: 0 };
+
+    server.assert_response(format!("/content/{id}"), StatusCode::OK, "foo");
+
+    let response = reqwest::blocking::Client::new()
+      .get(server.join_url(&format!("/content/{id}")))
+      .header("service-worker", "script")
+      .send()
+      .unwrap();
+
+    assert_eq!(response.status(), StatusCode::FORBIDDEN);
+    assert_eq!(response.text().unwrap(), "service workers are forbidden");
   }
 
   #[test]
